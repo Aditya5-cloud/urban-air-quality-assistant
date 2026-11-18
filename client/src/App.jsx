@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import IntakeForm from './components/IntakeForm/IntakeForm';
 import './App.css';
 
 function App() {
   const [serverHealth, setServerHealth] = useState({ status: 'checking', message: 'Connecting to backend...' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [planResult, setPlanResult] = useState(null);
+  const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
     fetch('/api/health')
@@ -22,6 +26,33 @@ function App() {
         setServerHealth({ status: 'offline', message: `Backend unreachable (${err.message})` });
       });
   }, []);
+
+  const handleFormSubmit = async (formData) => {
+    setIsLoading(true);
+    setApiError(null);
+
+    try {
+      const response = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || `Server returned error (${response.status})`);
+      }
+
+      setPlanResult(data);
+    } catch (err) {
+      setApiError(err.message || 'Failed to generate air quality plan. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="app-container">
@@ -59,15 +90,26 @@ function App() {
           </p>
         </section>
 
-        {/* Dynamic components will be rendered here in subsequent chunks */}
-        <section className="placeholder-container" aria-label="Assistant workspace">
-          <div className="placeholder-notice">
-            <p className="placeholder-title">Foundation Stage Ready</p>
-            <p className="placeholder-desc">
-              The MERN foundation is established. The intake form, AI recommendation pipeline, results visualization, and follow-up chat will be incrementally integrated.
-            </p>
+        {apiError && (
+          <div className="error-banner" role="alert" aria-live="assertive">
+            <p className="error-title">⚠️ Error Generating Guidance</p>
+            <p>{apiError}</p>
           </div>
-        </section>
+        )}
+
+        <IntakeForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+
+        {planResult && (
+          <section className="results-preview" aria-labelledby="results-preview-heading">
+            <div className="results-preview-header">
+              <h3 id="results-preview-heading">Plan Generated for {planResult.profile.city}</h3>
+              <span className="session-tag">Session ID: {planResult.sessionId.slice(0, 8)}...</span>
+            </div>
+            <p className="plan-summary-note">
+              Routines ({planResult.recommendations.routines.length}) • Indoor Hacks ({planResult.recommendations.indoorHacks.length}) • Sustainable Alternatives ({planResult.recommendations.alternatives.length})
+            </p>
+          </section>
+        )}
       </main>
 
       <footer className="app-footer" role="contentinfo">

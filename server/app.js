@@ -4,6 +4,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const env = require('./config/env');
 const healthRoutes = require('./routes/health');
+const recommendRoutes = require('./routes/recommend');
+const sessionRoutes = require('./routes/session');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -44,6 +46,8 @@ if (env.NODE_ENV !== 'test') {
 
 // Routes
 app.use('/api', healthRoutes);
+app.use('/api', recommendRoutes);
+app.use('/api', sessionRoutes);
 
 // Fallback & error handling
 app.use(notFoundHandler);
