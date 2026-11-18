@@ -6,6 +6,7 @@ const env = require('./config/env');
 const healthRoutes = require('./routes/health');
 const recommendRoutes = require('./routes/recommend');
 const sessionRoutes = require('./routes/session');
+const chatRoutes = require('./routes/chat');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -48,6 +49,7 @@ if (env.NODE_ENV !== 'test') {
 app.use('/api', healthRoutes);
 app.use('/api', recommendRoutes);
 app.use('/api', sessionRoutes);
+app.use('/api', chatRoutes);
 
 // Fallback & error handling
 app.use(notFoundHandler);

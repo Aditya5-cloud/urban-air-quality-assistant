@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import IntakeForm from './components/IntakeForm/IntakeForm';
+import ResultsPanel from './components/ResultsPanel/ResultsPanel';
+import ChatWidget from './components/ChatWidget/ChatWidget';
 import './App.css';
 
 function App() {
@@ -8,7 +10,9 @@ function App() {
   const [planResult, setPlanResult] = useState(null);
   const [apiError, setApiError] = useState(null);
 
+  // Check health and detect shareable session in URL (?session=<uuid>)
   useEffect(() => {
+    // 1. Backend health check
     fetch('/api/health')
       .then((res) => res.json())
       .then((data) => {
@@ -25,6 +29,35 @@ function App() {
       .catch((err) => {
         setServerHealth({ status: 'offline', message: `Backend unreachable (${err.message})` });
       });
+
+    // 2. Session URL parameter check (?session=<id>)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlSessionId = params.get('session');
+      if (urlSessionId) {
+        setIsLoading(true);
+        fetch(`/api/session/${encodeURIComponent(urlSessionId)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.session) {
+              setPlanResult({
+                sessionId: data.session.id,
+                profile: data.session.profile,
+                recommendations: data.session.recommendations,
+                chatHistory: data.session.chatHistory || [],
+              });
+            } else {
+              setApiError('Session link not found or has expired. You can generate a fresh plan below.');
+            }
+          })
+          .catch((err) => {
+            setApiError(`Could not load session (${err.message}).`);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
+    }
   }, []);
 
   const handleFormSubmit = async (formData) => {
@@ -47,10 +80,24 @@ function App() {
       }
 
       setPlanResult(data);
+
+      // Update URL query string without reloading page
+      if (typeof window !== 'undefined' && data.sessionId) {
+        const newUrl = `${window.location.pathname}?session=${data.sessionId}`;
+        window.history.pushState({ sessionId: data.sessionId }, '', newUrl);
+      }
     } catch (err) {
       setApiError(err.message || 'Failed to generate air quality plan. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setPlanResult(null);
+    setApiError(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', window.location.pathname);
     }
   };
 
@@ -92,23 +139,22 @@ function App() {
 
         {apiError && (
           <div className="error-banner" role="alert" aria-live="assertive">
-            <p className="error-title">⚠️ Error Generating Guidance</p>
+            <p className="error-title">⚠️ Notice</p>
             <p>{apiError}</p>
           </div>
         )}
 
-        <IntakeForm onSubmit={handleFormSubmit} isLoading={isLoading} />
-
-        {planResult && (
-          <section className="results-preview" aria-labelledby="results-preview-heading">
-            <div className="results-preview-header">
-              <h3 id="results-preview-heading">Plan Generated for {planResult.profile.city}</h3>
-              <span className="session-tag">Session ID: {planResult.sessionId.slice(0, 8)}...</span>
-            </div>
-            <p className="plan-summary-note">
-              Routines ({planResult.recommendations.routines.length}) • Indoor Hacks ({planResult.recommendations.indoorHacks.length}) • Sustainable Alternatives ({planResult.recommendations.alternatives.length})
-            </p>
-          </section>
+        {!planResult ? (
+          <IntakeForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+        ) : (
+          <>
+            <ResultsPanel planData={planResult} onReset={handleReset} />
+            <ChatWidget
+              sessionId={planResult.sessionId}
+              initialHistory={planResult.chatHistory || []}
+              profileCity={planResult.profile?.city}
+            />
+          </>
         )}
       </main>
 
