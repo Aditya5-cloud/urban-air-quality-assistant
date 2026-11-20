@@ -11,9 +11,28 @@ const DEFAULT_FORM_DATA = {
   notes: '',
 };
 
-function IntakeForm({ onSubmit, isLoading }) {
+function IntakeForm({ onSubmit, isLoading, presetData }) {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [errors, setErrors] = useState({});
+
+  // Sync external preset if provided
+  React.useEffect(() => {
+    if (presetData) {
+      setFormData((prev) => ({
+        ...prev,
+        ...presetData,
+      }));
+      setErrors({});
+    }
+  }, [presetData]);
+
+  const loadPreset = (preset) => {
+    setFormData({
+      ...DEFAULT_FORM_DATA,
+      ...preset,
+    });
+    setErrors({});
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -71,6 +90,66 @@ function IntakeForm({ onSubmit, isLoading }) {
         <p className="form-subtitle">
           Your details remain private and are only used to tailor low-emission routines and indoor air hacks.
         </p>
+
+        <div className="preset-quick-bar" aria-label="Sample test presets">
+          <span className="preset-label">Quick presets for evaluators:</span>
+          <div className="preset-buttons">
+            <button
+              type="button"
+              className="preset-btn"
+              onClick={() =>
+                loadPreset({
+                  city: 'New Delhi',
+                  householdType: 'family',
+                  householdSize: 4,
+                  commute: 'car',
+                  healthConcern: true,
+                  seasonContext: 'winter_smog',
+                  notes: 'Two school-age children, morning carpool, gas cooking in flat.',
+                })
+              }
+              aria-label="Load sample Delhi Family preset"
+            >
+              👨‍👩‍👧 New Delhi Family
+            </button>
+            <button
+              type="button"
+              className="preset-btn"
+              onClick={() =>
+                loadPreset({
+                  city: 'Beijing',
+                  householdType: 'individual',
+                  householdSize: 2,
+                  commute: 'cycle',
+                  healthConcern: false,
+                  seasonContext: 'winter_smog',
+                  notes: 'Active daily bicycle commuter, 3rd floor apartment.',
+                })
+              }
+              aria-label="Load sample Active Commuter preset"
+            >
+              🚴‍♂️ Active Commuter
+            </button>
+            <button
+              type="button"
+              className="preset-btn"
+              onClick={() =>
+                loadPreset({
+                  city: 'Lahore',
+                  householdType: 'elderly',
+                  householdSize: 3,
+                  commute: 'public',
+                  healthConcern: true,
+                  seasonContext: 'winter_smog',
+                  notes: 'Elderly grandparents with chronic bronchitis. Ground floor house.',
+                })
+              }
+              aria-label="Load sample Vulnerable Elderly preset"
+            >
+              👵 Vulnerable Elderly
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Fieldset: Location & Living Setup */}

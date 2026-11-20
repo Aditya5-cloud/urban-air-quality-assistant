@@ -59,7 +59,7 @@ describe('IntakeForm Component', () => {
     const cityInput = screen.getByLabelText(/City \/ Urban Area/i);
     expect(cityInput).toBeDisabled();
 
-    const submitBtn = screen.getByRole('button');
+    const submitBtn = screen.getByRole('button', { name: /Generating personalized air quality plan/i });
     expect(submitBtn).toBeDisabled();
     expect(screen.getByText(/Analyzing Smog Patterns & Generating Plan/i)).toBeInTheDocument();
   });
