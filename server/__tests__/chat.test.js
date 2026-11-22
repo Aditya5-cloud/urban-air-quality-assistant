@@ -47,6 +47,26 @@ describe('Chat Endpoint (POST /api/chat)', () => {
     expect(sessionRes.body.session.chatHistory[1].role).toBe('assistant');
   });
 
+  it('accepts multi-turn requests with realistic long assistant replies in history', async () => {
+    // Simulate a second and third turn where history contains prior long assistant reply (>500 chars)
+    const longReply = 'During severe smog episodes, make sure to keep your vehicle windows closed at all times. Turn on the internal air recirculation mode on your car air conditioning so dirty exhaust fumes are not pulled into your cabin. If you must travel with your children during morning peak hours, having them wear a properly-fitted child N95 or KN95 mask will filter out the vast majority of toxic particulate matter and soot from street-level emissions.'.repeat(2);
+
+    const turn2Res = await request(app)
+      .post('/api/chat')
+      .send({
+        sessionId: activeSessionId,
+        message: 'What about indoor air filters for the bedroom?',
+        history: [
+          { role: 'user', text: 'How to protect kids in cars?' },
+          { role: 'assistant', text: longReply },
+        ],
+      });
+
+    expect(turn2Res.statusCode).toBe(200);
+    expect(turn2Res.body.success).toBe(true);
+    expect(turn2Res.body).toHaveProperty('reply');
+  });
+
   it('rejects requests with invalid UUID format', async () => {
     const res = await request(app)
       .post('/api/chat')
@@ -85,8 +105,8 @@ describe('Chat Endpoint (POST /api/chat)', () => {
     expect(res.body.success).toBe(false);
   });
 
-  it('rejects history exceeding 10 turns', async () => {
-    const fakeHistory = Array.from({ length: 11 }, (_, i) => ({
+  it('rejects history exceeding maximum limit', async () => {
+    const fakeHistory = Array.from({ length: 31 }, (_, i) => ({
       role: i % 2 === 0 ? 'user' : 'assistant',
       text: `Message ${i}`,
     }));

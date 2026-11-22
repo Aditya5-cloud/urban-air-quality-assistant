@@ -44,14 +44,11 @@ describe('ResultsPanel Component', () => {
     expect(screen.getByText(/Reduces indoor PM2.5 by 50%/i)).toBeInTheDocument();
   });
 
-  it('renders the shareable session link input and copy button', () => {
+  it('confirms shareable session link section is cleanly removed', () => {
     render(<ResultsPanel planData={mockPlan} onReset={vi.fn()} />);
 
-    const shareInput = screen.getByLabelText(/Shareable Session Link/i);
-    expect(shareInput).toBeInTheDocument();
-    expect(shareInput.value).toContain('session=550e8400-e29b-41d4-a716-446655440000');
-
-    expect(screen.getByRole('button', { name: /Copy plan link to clipboard/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Shareable Session Link/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Copy plan link to clipboard/i })).not.toBeInTheDocument();
   });
 
   it('calls onReset when user clicks modify details', async () => {

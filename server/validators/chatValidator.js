@@ -11,12 +11,12 @@ const validateChat = [
   body('message')
     .trim()
     .notEmpty().withMessage('Message text cannot be empty')
-    .isLength({ min: 1, max: 500 }).withMessage('Message must be between 1 and 500 characters')
+    .isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters')
     .escape(),
 
   body('history')
     .optional()
-    .isArray({ max: 10 }).withMessage('Conversation history cannot exceed 10 turns')
+    .isArray({ max: 30 }).withMessage('Conversation history cannot exceed 30 messages')
     .custom((history) => {
       if (!Array.isArray(history)) return true;
       for (const item of history) {
@@ -26,8 +26,9 @@ const validateChat = [
         if (!['user', 'assistant'].includes(item.role)) {
           throw new Error('History role must be either "user" or "assistant"');
         }
-        if (typeof item.text !== 'string' || item.text.trim().length === 0 || item.text.length > 500) {
-          throw new Error('History text must be non-empty and under 500 characters');
+        // Allow up to 5000 characters per message in history so full assistant responses are supported
+        if (typeof item.text !== 'string' || item.text.trim().length === 0 || item.text.length > 5000) {
+          throw new Error('History text must be non-empty and under 5000 characters');
         }
       }
       return true;

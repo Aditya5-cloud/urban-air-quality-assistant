@@ -30,6 +30,12 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
     setIsSending(true);
     setChatError(null);
 
+    // Prepare prior history (up to last 10 messages) before adding current query
+    const historyToSend = messages.slice(-10).map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      text: m.text,
+    }));
+
     const userMessage = { role: 'user', text: trimmed, timestamp: new Date().toISOString() };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -42,7 +48,7 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
         body: JSON.stringify({
           sessionId,
           message: trimmed,
-          history: updatedMessages.slice(-10), // Cap context to last 10 messages
+          history: historyToSend,
         }),
       });
 
@@ -125,7 +131,7 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isSending}
-          maxLength={500}
+          maxLength={1000}
           autoComplete="off"
         />
         <button

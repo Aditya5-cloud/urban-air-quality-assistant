@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import RecommendCard from './RecommendCard';
-import ShareLink from '../common/ShareLink';
 import './ResultsPanel.css';
 
 function ResultsPanel({ planData, onReset }) {
   const headingRef = useRef(null);
 
   useEffect(() => {
-    if (headingRef.current) {
-      headingRef.current.focus();
+    // Focus without scrolling the page
+    if (headingRef.current && typeof headingRef.current.focus === 'function') {
+      headingRef.current.focus({ preventScroll: true });
     }
   }, []);
 
@@ -16,7 +16,7 @@ function ResultsPanel({ planData, onReset }) {
     return null;
   }
 
-  const { profile, recommendations, sessionId, metadata } = planData;
+  const { profile, recommendations, metadata } = planData;
   const { routines, indoorHacks, alternatives, impacts } = recommendations;
 
   const isLiveAi = metadata && !metadata.isMock;
@@ -117,9 +117,6 @@ function ResultsPanel({ planData, onReset }) {
           categoryClass="category-alternatives"
         />
       </div>
-
-      {/* Shareable Link Component */}
-      {sessionId && <ShareLink sessionId={sessionId} />}
     </section>
   );
 }
