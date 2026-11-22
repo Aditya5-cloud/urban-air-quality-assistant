@@ -1,11 +1,10 @@
 import React from 'react';
 import './LandingHero.css';
 
-function LandingHero({ onSelectPreset }) {
-  const scrollToGenerator = () => {
-    const el = document.getElementById('plan-generator');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+function LandingHero({ onSelectPreset, onLaunchAssistant }) {
+  const handleLaunch = () => {
+    if (onLaunchAssistant) {
+      onLaunchAssistant();
     }
   };
 
@@ -13,7 +12,9 @@ function LandingHero({ onSelectPreset }) {
     if (onSelectPreset) {
       onSelectPreset(preset);
     }
-    scrollToGenerator();
+    if (onLaunchAssistant) {
+      onLaunchAssistant();
+    }
   };
 
   return (
@@ -39,7 +40,7 @@ function LandingHero({ onSelectPreset }) {
       <div className="hero-cta-group">
         <button
           type="button"
-          onClick={scrollToGenerator}
+          onClick={handleLaunch}
           className="cta-primary-btn cta-large-btn"
           aria-label="Generate Your Clean Air Plan"
         >
@@ -51,7 +52,7 @@ function LandingHero({ onSelectPreset }) {
       <div className="hero-presets-card" aria-label="One-click sample profiles">
         <div className="presets-label-row">
           <span className="presets-title">⚡ Instant Evaluator Demos:</span>
-          <span className="presets-hint">Click any profile below to pre-populate the assistant</span>
+          <span className="presets-hint">Click any profile below to launch pre-populated assistant</span>
         </div>
         <div className="presets-grid">
           <button

@@ -20,7 +20,7 @@ describe('Navbar Component', () => {
     const handleNavigate = vi.fn();
     render(<Navbar onNavigateToGenerator={handleNavigate} />);
 
-    const getPlanBtn = screen.getByRole('link', { name: /Jump to plan generator/i });
+    const getPlanBtn = screen.getByRole('button', { name: /Jump to plan generator/i });
     expect(getPlanBtn).toBeInTheDocument();
 
     await user.click(getPlanBtn);

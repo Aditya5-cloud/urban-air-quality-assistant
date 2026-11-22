@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navigation/Navbar';
 import LandingHero from './components/LandingHero/LandingHero';
-import IntakeForm from './components/IntakeForm/IntakeForm';
-import ResultsPanel from './components/ResultsPanel/ResultsPanel';
-import ChatWidget from './components/ChatWidget/ChatWidget';
 import FAQSection from './components/FAQSection/FAQSection';
+import AssistantDashboard from './components/AssistantDashboard/AssistantDashboard';
 import './App.css';
 
 function App() {
+  const [view, setView] = useState('landing'); // 'landing' | 'assistant'
   const [isLoading, setIsLoading] = useState(false);
   const [planResult, setPlanResult] = useState(null);
   const [apiError, setApiError] = useState(null);
@@ -15,12 +14,12 @@ function App() {
 
   // Check health and detect shareable session in URL (?session=<uuid>)
   useEffect(() => {
-    // Session URL parameter check (?session=<id>)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlSessionId = params.get('session');
       if (urlSessionId) {
         setIsLoading(true);
+        setView('assistant');
         fetch(`/api/session/${encodeURIComponent(urlSessionId)}`)
           .then((res) => res.json())
           .then((data) => {
@@ -71,14 +70,6 @@ function App() {
         const newUrl = `${window.location.pathname}?session=${data.sessionId}`;
         window.history.pushState({ sessionId: data.sessionId }, '', newUrl);
       }
-
-      // Smooth scroll into results view
-      setTimeout(() => {
-        const resultsEl = document.getElementById('plan-results-anchor');
-        if (resultsEl) {
-          resultsEl.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
     } catch (err) {
       setApiError(err.message || 'Failed to generate air quality plan. Please try again.');
     } finally {
@@ -99,65 +90,62 @@ function App() {
     setSelectedPreset(preset);
   };
 
+  const handleLaunchAssistant = (preset = null) => {
+    if (preset) {
+      setSelectedPreset(preset);
+    }
+    setView('assistant');
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleBackToLanding = () => {
+    setView('landing');
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="app-container">
-      {/* Clean Accessible Navigation Bar with Weather & AQI Indicators */}
+      {/* Clean Accessible Navigation Bar with Real-time Indicators */}
       <Navbar
-        onNavigateToGenerator={() => {
-          const el = document.getElementById('plan-generator');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
+        currentView={view}
+        onNavigateToGenerator={() => handleLaunchAssistant()}
+        onNavigateToLanding={handleBackToLanding}
       />
 
-      <main id="main-content" className="app-main-landing" role="main" tabIndex="-1">
-        {/* Focused Hero Section with 1-Click Preset Demos */}
-        <LandingHero onSelectPreset={handlePresetSelect} />
+      <main id="main-content" className="app-main-content" role="main" tabIndex="-1">
+        {view === 'landing' ? (
+          <div className="landing-view-wrapper">
+            {/* Focused Hero Section with 1-Click Preset Demos */}
+            <LandingHero
+              onSelectPreset={handlePresetSelect}
+              onLaunchAssistant={(preset) => handleLaunchAssistant(preset)}
+            />
 
-        {/* Interactive Workspace / Generator */}
-        <section id="plan-generator" className="generator-section" aria-labelledby="generator-heading">
-          <div className="generator-container">
-            <div className="section-header">
-              <span className="section-tag">Interactive Assistant</span>
-              <h2 id="generator-heading" className="section-title">
-                {planResult ? 'Your Customized Clean Air Plan' : 'Generate Your Clean Air Plan'}
-              </h2>
-              <p className="section-subtitle">
-                {planResult
-                  ? 'Review your personalized low-emission routines, indoor hacks, and ask clarifying questions below.'
-                  : 'Tell the assistant about your urban area, household structure, and commute to receive evidence-based guidance in seconds.'}
-              </p>
-            </div>
-
-            {apiError && (
-              <div className="error-banner" role="alert" aria-live="assertive">
-                <p className="error-title">⚠️ Notice</p>
-                <p>{apiError}</p>
-              </div>
-            )}
-
-            <div id="plan-results-anchor">
-              {!planResult ? (
-                <IntakeForm
-                  onSubmit={handleFormSubmit}
-                  isLoading={isLoading}
-                  presetData={selectedPreset}
-                />
-              ) : (
-                <>
-                  <ResultsPanel planData={planResult} onReset={handleReset} />
-                  <ChatWidget
-                    sessionId={planResult.sessionId}
-                    initialHistory={planResult.chatHistory || []}
-                    profileCity={planResult.profile?.city}
-                  />
-                </>
-              )}
-            </div>
+            {/* FAQ Section */}
+            <FAQSection />
           </div>
-        </section>
-
-        {/* FAQ Section */}
-        <FAQSection />
+        ) : (
+          <div className="assistant-view-wrapper">
+            {/* Viewport-aligned Dedicated Interactive Assistant Workspace */}
+            <AssistantDashboard
+              planResult={planResult}
+              isLoading={isLoading}
+              apiError={apiError}
+              selectedPreset={selectedPreset}
+              onSubmitForm={handleFormSubmit}
+              onResetPlan={handleReset}
+              onBackToLanding={handleBackToLanding}
+              onSelectPreset={(preset) => {
+                setSelectedPreset(preset);
+                handleFormSubmit(preset);
+              }}
+            />
+          </div>
+        )}
       </main>
 
       {/* Clean, Simple Footer */}
@@ -171,7 +159,7 @@ function App() {
             PromptWar Challenge 6 • GenAI-Powered Winter Smog Navigation • Privacy by Design (Zero PII)
           </p>
           <p className="simple-footer-copy">
-            © 2026 Urban Air Quality Assistant. Powered by Google Gemini 2.0 Flash.
+            © 2026 Urban Air Quality Assistant. Powered by Open-Meteo & Google Gemini 2.0 Flash.
           </p>
         </div>
       </footer>

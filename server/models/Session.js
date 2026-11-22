@@ -1,129 +1,72 @@
-const mongoose = require('mongoose');
 const env = require('../config/env');
-const { isDbConnected } = require('../config/db');
-
-// In-memory session store fallback when MongoDB is unavailable/disconnected
-const memoryStore = new Map();
-
-const sessionSchema = new mongoose.Schema(
-  {
-    _id: {
-      type: String,
-      required: true,
-    },
-    profile: {
-      city: { type: String, required: true },
-      householdType: { type: String, required: true },
-      householdSize: { type: Number, required: true },
-      commute: { type: String, required: true },
-      healthConcern: { type: Boolean, required: true },
-      seasonContext: { type: String, required: true },
-      notes: { type: String, default: '' },
-    },
-    recommendations: {
-      routines: [{ type: String }],
-      indoorHacks: [{ type: String }],
-      alternatives: [{ type: String }],
-      impacts: [{ type: String }],
-    },
-    chatHistory: [
-      {
-        role: { type: String, enum: ['user', 'assistant'], required: true },
-        text: { type: String, required: true },
-        timestamp: { type: Date, default: Date.now },
-      },
-    ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    expiresAt: {
-      type: Date,
-      default: () => new Date(Date.now() + env.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000),
-      index: { expires: 0 }, // MongoDB TTL auto-cleanup
-    },
-  },
-  {
-    _id: false, // We supply custom UUID string _id
-    versionKey: false,
-  }
-);
-
-let MongooseSession;
-try {
-  MongooseSession = mongoose.model('Session', sessionSchema);
-} catch {
-  MongooseSession = mongoose.model('Session');
-}
 
 /**
- * High-level Session Repository that transparently uses MongoDB when connected
- * and falls back to in-memory store if DB is offline.
+ * In-Memory Session Repository with TTL (Time-To-Live) management.
+ * Provides high-speed, zero-dependency persistence tailored for serverless/Vercel environments.
  */
 class SessionRepository {
-  static async save(sessionData) {
-    if (isDbConnected()) {
-      try {
-        const sessionDoc = new MongooseSession(sessionData);
-        await sessionDoc.save();
-        return sessionDoc.toObject();
-      } catch (dbErr) {
-        console.warn(`[Session Repo] DB save failed, storing in memory: ${dbErr.message}`);
-      }
-    }
+  static store = new Map();
 
-    // In-memory fallback
-    memoryStore.set(sessionData._id, {
+  static async save(sessionData) {
+    const ttlMs = (env.SESSION_TTL_DAYS || 7) * 24 * 60 * 60 * 1000;
+    const expiresAt = sessionData.expiresAt || new Date(Date.now() + ttlMs);
+
+    const record = {
       ...sessionData,
+      _id: sessionData._id,
       createdAt: sessionData.createdAt || new Date(),
-      expiresAt: sessionData.expiresAt || new Date(Date.now() + env.SESSION_TTL_DAYS * 86400000),
-    });
-    return sessionData;
+      expiresAt,
+    };
+
+    SessionRepository.store.set(sessionData._id, record);
+    return record;
   }
 
   static async findById(id) {
-    if (isDbConnected()) {
-      try {
-        const doc = await MongooseSession.findById(id).lean();
-        if (doc) return doc;
-      } catch (dbErr) {
-        console.warn(`[Session Repo] DB find failed: ${dbErr.message}`);
-      }
+    if (!id || typeof id !== 'string') return null;
+
+    const record = SessionRepository.store.get(id);
+    if (!record) return null;
+
+    // Check if session has expired
+    if (record.expiresAt && new Date(record.expiresAt).getTime() < Date.now()) {
+      SessionRepository.store.delete(id);
+      return null;
     }
 
-    return memoryStore.get(id) || null;
+    return record;
   }
 
   static async appendChat(id, messagePair) {
-    if (isDbConnected()) {
-      try {
-        const updated = await MongooseSession.findByIdAndUpdate(
-          id,
-          { $push: { chatHistory: { $each: messagePair } } },
-          { new: true }
-        ).lean();
-        if (updated) return updated;
-      } catch (dbErr) {
-        console.warn(`[Session Repo] DB chat append failed: ${dbErr.message}`);
-      }
+    const session = await SessionRepository.findById(id);
+    if (!session) return null;
+
+    if (!Array.isArray(session.chatHistory)) {
+      session.chatHistory = [];
     }
 
-    const session = memoryStore.get(id);
-    if (session) {
-      if (!session.chatHistory) session.chatHistory = [];
-      session.chatHistory.push(...messagePair);
-      memoryStore.set(id, session);
-      return session;
-    }
-    return null;
+    session.chatHistory.push(...messagePair);
+    SessionRepository.store.set(id, session);
+    return session;
   }
 
   static clearMemory() {
-    memoryStore.clear();
+    SessionRepository.store.clear();
+  }
+
+  /**
+   * Periodic sweep to purge expired sessions and prevent memory growth
+   */
+  static purgeExpired() {
+    const now = Date.now();
+    for (const [id, record] of SessionRepository.store.entries()) {
+      if (record.expiresAt && new Date(record.expiresAt).getTime() < now) {
+        SessionRepository.store.delete(id);
+      }
+    }
   }
 }
 
 module.exports = {
-  SessionModel: MongooseSession,
   SessionRepository,
 };

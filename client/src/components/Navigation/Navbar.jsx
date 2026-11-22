@@ -1,14 +1,13 @@
 import React from 'react';
 import './Navbar.css';
 
-function Navbar({ onNavigateToGenerator }) {
-  const handleGeneratorClick = (e) => {
+function Navbar({ currentView = 'landing', onNavigateToGenerator, onNavigateToLanding }) {
+  const handleCtaClick = (e) => {
     e.preventDefault();
-    if (onNavigateToGenerator) {
-      onNavigateToGenerator();
+    if (currentView === 'assistant') {
+      if (onNavigateToLanding) onNavigateToLanding();
     } else {
-      const el = document.getElementById('plan-generator');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      if (onNavigateToGenerator) onNavigateToGenerator();
     }
   };
 
@@ -17,7 +16,17 @@ function Navbar({ onNavigateToGenerator }) {
       <div className="navbar-container">
         <a href="#main-content" className="skip-link">Skip to main content</a>
 
-        <div className="navbar-brand">
+        <div
+          className="navbar-brand"
+          onClick={() => onNavigateToLanding && onNavigateToLanding()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && onNavigateToLanding) onNavigateToLanding();
+          }}
+          style={{ cursor: 'pointer' }}
+          aria-label="Urban Air Quality Assistant Home"
+        >
           <span className="navbar-logo" aria-hidden="true">🍃</span>
           <div className="brand-text">
             <span className="brand-title">Urban Air Quality Assistant</span>
@@ -43,14 +52,14 @@ function Navbar({ onNavigateToGenerator }) {
             </div>
           </div>
 
-          <a
-            href="#plan-generator"
-            onClick={handleGeneratorClick}
+          <button
+            type="button"
+            onClick={handleCtaClick}
             className="header-cta-btn"
             aria-label="Jump to plan generator"
           >
-            Get Plan ➔
-          </a>
+            {currentView === 'assistant' ? '← Overview' : 'Get Plan ➔'}
+          </button>
         </div>
       </div>
     </header>

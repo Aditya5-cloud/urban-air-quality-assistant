@@ -4,6 +4,7 @@ const env = require('./config/env');
 const { configureHelmet, configureCors } = require('./middleware/security');
 const { aiRateLimiter, generalRateLimiter } = require('./middleware/rateLimiter');
 const healthRoutes = require('./routes/health');
+const weatherAqiRoutes = require('./routes/weatherAqi');
 const recommendRoutes = require('./routes/recommend');
 const sessionRoutes = require('./routes/session');
 const chatRoutes = require('./routes/chat');
@@ -45,6 +46,7 @@ if (env.NODE_ENV !== 'test') {
 
 // Routes - with aiRateLimiter applied to GenAI routes
 app.use('/api', healthRoutes);
+app.use('/api', weatherAqiRoutes);
 app.use('/api', aiRateLimiter, recommendRoutes);
 app.use('/api', sessionRoutes);
 app.use('/api', aiRateLimiter, chatRoutes);

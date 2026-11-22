@@ -1,12 +1,10 @@
 const express = require('express');
-const { isDbConnected } = require('../config/db');
 const env = require('../config/env');
 
 const router = express.Router();
 
 router.get('/health', (req, res) => {
-  const dbStatus = isDbConnected() ? 'connected' : 'disconnected';
-  const hasAiKey = Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim() !== '');
+  const hasAiKey = Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim() !== '' && env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
 
   res.status(200).json({
     success: true,
@@ -15,8 +13,9 @@ router.get('/health', (req, res) => {
     uptime: process.uptime(),
     environment: env.NODE_ENV,
     services: {
-      database: dbStatus,
+      database: 'in-memory-ttl',
       geminiConfigured: hasAiKey,
+      weatherAqiProvider: 'open-meteo-live',
     },
   });
 });

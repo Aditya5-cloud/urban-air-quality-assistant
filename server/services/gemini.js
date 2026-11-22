@@ -28,12 +28,10 @@ You MUST respond strictly with a valid JSON object matching this exact schema:
 }
 Return only pure JSON. Do not wrap in markdown or backticks.`;
 
-/**
- * Clean and parse raw JSON text returned by Gemini LLM
- */
+const DOMAIN_BOUNDARY_DECLINE = 'I am the Urban Air Quality Assistant. I specialize exclusively in winter smog navigation, indoor air quality hacks, and low-emission routines. Please ask an air quality or smog-related question.';
+
 const cleanAndParseJson = (rawText) => {
   let cleaned = rawText.trim();
-  // Strip code block fences if present
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   }
@@ -55,17 +53,14 @@ const cleanAndParseJson = (rawText) => {
   }
 };
 
-/**
- * Local deterministic simulation when GEMINI_API_KEY is not configured.
- * Clearly identified via metadata as simulation to ensure complete transparency.
- */
-const generateSimulatedRecommendations = (profile) => {
+const generateSimulatedRecommendations = (profile, atmospheric) => {
   const isWinter = profile.seasonContext === 'winter_smog';
   const hasHealthRisk = profile.healthConcern;
   const isFamily = profile.householdType === 'family' || profile.householdType === 'elderly';
+  const aqiInfo = atmospheric?.airQuality ? ` (Current Real-time AQI: ${atmospheric.airQuality.us_aqi}, PM2.5: ${atmospheric.airQuality.pm2_5} µg/m³)` : '';
 
   const routines = [
-    `Shift morning outdoor commutes and errands in ${profile.city} past 10:30 AM once nocturnal surface temperature inversion dissipates.`,
+    `Shift morning outdoor commutes and errands in ${profile.city}${aqiInfo} past 10:30 AM once nocturnal surface temperature inversion dissipates.`,
     profile.commute === 'car'
       ? 'Consolidate multiple short vehicle trips into a single warm-engine chain, or use public transit 2 days/week to avoid cold-start particulate spikes.'
       : 'Choose sheltered transit corridors with tree canopy buffers rather than walking directly alongside multi-lane arterial roads.',
@@ -115,20 +110,13 @@ const generateSimulatedRecommendations = (profile) => {
 };
 
 class GeminiService {
-  /**
-   * Check whether real Gemini API key is configured
-   */
   static isConfigured() {
     return Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim() !== '' && env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
   }
 
-  /**
-   * Generate tailored air quality recommendations
-   */
-  static async getRecommendations(profile) {
+  static async getRecommendations(profile, atmosphericData = null) {
     if (!GeminiService.isConfigured()) {
-      console.info('[Gemini Service] GEMINI_API_KEY is not set or placeholder. Utilizing transparent simulation fallback.');
-      return generateSimulatedRecommendations(profile);
+      return generateSimulatedRecommendations(profile, atmosphericData);
     }
 
     try {
@@ -137,11 +125,20 @@ class GeminiService {
         model: env.GEMINI_MODEL,
         systemInstruction: SYSTEM_INSTRUCTION,
         generationConfig: {
-          temperature: 0.3, // Consistent, factual, and focused
+          temperature: 0.3,
           topP: 0.8,
           responseMimeType: 'application/json',
         },
       });
+
+      const atmosphericContext = atmosphericData ? `
+REAL-TIME ATMOSPHERIC CONDITIONS:
+- Measured PM2.5: ${atmosphericData.airQuality?.pm2_5 || 'Unknown'} µg/m³
+- Current US AQI: ${atmosphericData.airQuality?.us_aqi || 'Unknown'} (${atmosphericData.airQuality?.category || 'Moderate'})
+- Temperature: ${atmosphericData.weather?.temperature || 'Unknown'} °C
+- Current Condition: ${atmosphericData.weather?.condition || 'Winter Haze'}
+- Thermal Inversion Stagnation Risk: ${atmosphericData.weather?.inversionRisk || 'High'}
+` : '';
 
       const prompt = `Generate tailored urban air quality guidance for the following household profile:
 - City: ${profile.city}
@@ -151,6 +148,7 @@ class GeminiService {
 - Vulnerable Health Concerns Present: ${profile.healthConcern ? 'YES (respiratory/cardiovascular vulnerability)' : 'NO'}
 - Seasonal Context: ${profile.seasonContext}
 - Specific Lifestyle Notes / Constraints: ${profile.notes || 'None provided'}
+${atmosphericContext}
 
 Provide 3-4 items in each required array: "routines", "indoorHacks", "alternatives", and "impacts".`;
 
@@ -170,20 +168,37 @@ Provide 3-4 items in each required array: "routines", "indoorHacks", "alternativ
         },
       };
     } catch (apiError) {
-      console.error(`[Gemini API Error] ${apiError.message}. Gracefully falling back to transparent local simulation.`);
-      const fallback = generateSimulatedRecommendations(profile);
+      console.error(`[Gemini API Error] ${apiError.message}. Using simulation fallback.`);
+      const fallback = generateSimulatedRecommendations(profile, atmosphericData);
       fallback.metadata.fallbackReason = apiError.message;
       return fallback;
     }
   }
 
-  /**
-   * Multi-turn chat assistant continuation
-   */
   static async getChatReply(chatHistory, newMessage, profileContext) {
+    const isAirQualityQuery = (text) => {
+      const lower = text.toLowerCase();
+      const keywords = [
+        'air', 'smog', 'aqi', 'pm2.5', 'pm10', 'pollution', 'breathe', 'inversion',
+        'filter', 'hepa', 'merv', 'mask', 'n95', 'window', 'ventilation', 'outdoor',
+        'indoor', 'asthma', 'lung', 'cough', 'commute', 'traffic', 'car', 'bike',
+        'exercise', 'run', 'walk', 'fan', 'plant', 'heater', 'purifier', 'child', 'elderly'
+      ];
+      return keywords.some((k) => lower.includes(k));
+    };
+
+    // Off-topic guardrail enforcement
+    const trimmed = (newMessage || '').trim();
+    if (!isAirQualityQuery(trimmed)) {
+      return {
+        reply: DOMAIN_BOUNDARY_DECLINE,
+        metadata: { source: 'domain-guardrail', isMock: false },
+      };
+    }
+
     if (!GeminiService.isConfigured()) {
       return {
-        reply: `[Simulated Advice for ${profileContext?.city || 'your city'}] Based on your inquiry regarding "${newMessage}", during winter smog it is critical to prioritize HEPA or MERV-13 air filtration, seal ambient window drafts, and coordinate necessary outdoor trips past mid-morning. (To activate real-time Gemini LLM responses, set GEMINI_API_KEY in .env)`,
+        reply: `[Air Quality Guidance for ${profileContext?.city || 'your area'}] Regarding "${newMessage}": During winter smog episodes, maintain sealed doors, avoid morning exercise during thermal inversion troughs, and run MERV-13 / Corsi-Rosenthal DIY air cleaners. (Add your free GEMINI_API_KEY in .env for live AI responses).`,
         metadata: {
           source: 'local-simulation (GEMINI_API_KEY unset)',
           isMock: true,
@@ -196,16 +211,20 @@ Provide 3-4 items in each required array: "routines", "indoorHacks", "alternativ
       const model = genAI.getGenerativeModel({
         model: env.GEMINI_MODEL,
         systemInstruction: `${SYSTEM_INSTRUCTION}
+STRICT DOMAIN BOUNDARY ENFORCEMENT:
+You are exclusively the Urban Air Quality Assistant. You MUST strictly decline to answer any question that is NOT directly related to air pollution, winter smog, thermal inversions, particulate matter (PM2.5/PM10), indoor air quality hacks, low-emission daily routines, respiratory protection, or sustainable living.
+If the user asks an off-topic query, reply strictly with:
+"${DOMAIN_BOUNDARY_DECLINE}"
+
 Context for current user:
 - City: ${profileContext?.city || 'Urban area'}
 - Household: ${profileContext?.householdType || 'General'}, Size: ${profileContext?.householdSize || 1}
 - Commute: ${profileContext?.commute || 'General'}
 - Health risk: ${profileContext?.healthConcern ? 'Yes' : 'No'}
 
-Answer the user's follow-up questions concisely, practically, and with clear direct impact explanations.`,
+Answer the user's air quality questions concisely, practically, and with clear direct impact explanations.`,
       });
 
-      // Format previous history into Gemini contents
       const formattedHistory = (chatHistory || []).slice(-10).map((msg) => ({
         role: msg.role === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }],

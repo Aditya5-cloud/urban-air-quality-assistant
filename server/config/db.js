@@ -1,55 +1,21 @@
-const mongoose = require('mongoose');
-const env = require('./env');
+/**
+ * Database abstraction layer.
+ * Note: MongoDB dependency was removed in favor of an in-memory TTL repository
+ * optimized for serverless deployments on platforms such as Vercel.
+ */
 
-let isConnected = false;
+const isDbConnected = () => true;
 
 const connectDB = async () => {
-  if (isConnected) {
-    return true;
-  }
-
-  try {
-    const conn = await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 3000, // Timeout fast if local mongod is not active
-    });
-
-    isConnected = conn.connection.readyState === 1;
-    console.log(`[Database] MongoDB connected: ${conn.connection.host}`);
-    return true;
-  } catch (error) {
-    isConnected = false;
-    console.warn(`[Database Warning] MongoDB connection failed: ${error.message}. Running with degraded persistence.`);
-    return false;
-  }
-};
-
-mongoose.connection.on('connected', () => {
-  isConnected = true;
-});
-
-mongoose.connection.on('disconnected', () => {
-  isConnected = false;
-  console.warn('[Database] MongoDB disconnected.');
-});
-
-mongoose.connection.on('error', (err) => {
-  isConnected = false;
-  console.error(`[Database Error] ${err.message}`);
-});
-
-const isDbConnected = () => {
-  return mongoose.connection.readyState === 1;
+  return true;
 };
 
 const disconnectDB = async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
-  }
-  isConnected = false;
+  return true;
 };
 
 module.exports = {
   connectDB,
-  isDbConnected,
   disconnectDB,
+  isDbConnected,
 };

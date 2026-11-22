@@ -1,21 +1,33 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 
-describe('App Root Component & Streamlined Landing Page', () => {
+describe('App Root Component & Two-View Architecture', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn(() =>
-      Promise.resolve({
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url.includes('/api/weather-aqi')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            success: true,
+            atmospheric: {
+              city: 'Delhi',
+              airQuality: { pm2_5: 110, us_aqi: 220, category: 'Very Unhealthy', color: '#9333ea' },
+              weather: { temperature: 20, condition: 'Clear sky', inversionRisk: 'High' },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
         json: () => Promise.resolve({
           success: true,
           status: 'healthy',
-          services: { database: 'connected' }
         }),
-      })
-    ));
+      });
+    }));
   });
 
-  it('renders the brand title and main hero headline', () => {
+  it('renders the brand title and main hero headline on landing view', () => {
     render(<App />);
     expect(screen.getAllByText('Urban Air Quality Assistant').length).toBeGreaterThan(0);
     const mainHeading = screen.getByRole('heading', { level: 1, name: /Navigate Severe Winter Smog/i });
@@ -36,15 +48,37 @@ describe('App Root Component & Streamlined Landing Page', () => {
     expect(main).toHaveAttribute('id', 'main-content');
   });
 
-  it('renders the plan generator workspace and FAQ section', () => {
+  it('navigates from landing page to dedicated assistant page on CTA click', async () => {
+    const user = userEvent.setup();
     render(<App />);
-    expect(screen.getByRole('heading', { level: 2, name: /Generate Your Clean Air Plan/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Frequently Asked Questions/i })).toBeInTheDocument();
+
+    // In landing view: form is NOT in the landing page
+    expect(screen.queryByRole('heading', { level: 2, name: /Personal Profile Intake/i })).not.toBeInTheDocument();
+
+    // Click CTA to open dedicated assistant view
+    const ctaBtn = screen.getByRole('button', { name: /Generate Your Clean Air Plan/i });
+    await user.click(ctaBtn);
+
+    // Now in dedicated Assistant view
+    expect(screen.getByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Personal Profile Intake/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Back to overview landing page/i })).toBeInTheDocument();
+
+    // Click back to return to landing
+    const backBtn = screen.getByRole('button', { name: /Back to overview landing page/i });
+    await user.click(backBtn);
+    expect(screen.getByRole('heading', { level: 1, name: /Navigate Severe Winter Smog/i })).toBeInTheDocument();
   });
 
-  it('confirms 3 pillars and why-us sections are cleanly removed from the main flow', () => {
+  it('opens dedicated assistant view when clicking an instant evaluator demo preset', async () => {
+    const user = userEvent.setup();
     render(<App />);
-    expect(screen.queryByRole('heading', { level: 2, name: /Three Pillars of Winter Smog Protection/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 2, name: /Why Traditional Weather Apps Fall Short/i })).not.toBeInTheDocument();
+
+    const presetBtn = screen.getByRole('button', { name: /Delhi Family Commuter/i });
+    await user.click(presetBtn);
+
+    // Dedicated assistant view is now active with form pre-populated
+    expect(screen.getByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('New Delhi')).toBeInTheDocument();
   });
 });
