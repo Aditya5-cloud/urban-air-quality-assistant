@@ -29,8 +29,6 @@ function Navbar({
   return (
     <header className="navbar-header" role="banner">
       <div className="navbar-container">
-        <a href="#main-content" className="skip-link">Skip to main content</a>
-
         <div
           className="navbar-brand"
           onClick={() => onNavigateToLanding && onNavigateToLanding()}

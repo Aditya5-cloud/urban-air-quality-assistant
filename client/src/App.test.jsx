@@ -36,15 +36,6 @@ describe('App Root Component & Two-View Architecture', () => {
     expect(mainHeading).toBeInTheDocument();
   });
 
-  it('provides a skip to content link for accessibility', async () => {
-    await act(async () => {
-      render(<App />);
-    });
-    const skipLink = screen.getByRole('link', { name: /Skip to main content/i });
-    expect(skipLink).toBeInTheDocument();
-    expect(skipLink).toHaveAttribute('href', '#main-content');
-  });
-
   it('renders main content container with role="main"', async () => {
     await act(async () => {
       render(<App />);

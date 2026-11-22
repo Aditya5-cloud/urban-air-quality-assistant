@@ -20,7 +20,7 @@ describe('Navbar Component', () => {
     },
   };
 
-  it('renders brand title, skip link, and real-time live atmospheric card in header', () => {
+  it('renders brand title and real-time live atmospheric card in header', () => {
     render(
       <Navbar
         currentView="landing"
@@ -31,7 +31,6 @@ describe('Navbar Component', () => {
     );
 
     expect(screen.getByText(/Urban Air Quality Assistant/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Skip to main content/i })).toBeInTheDocument();
 
     // Verify live atmospheric card in header
     expect(screen.getByText('Delhi')).toBeInTheDocument();
