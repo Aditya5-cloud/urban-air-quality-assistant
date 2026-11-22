@@ -8,10 +8,13 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
   const [isSending, setIsSending] = useState(false);
   const [chatError, setChatError] = useState(null);
   const messagesEndRef = useRef(null);
+  const logContainerRef = useRef(null);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    } else if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
 
@@ -77,13 +80,13 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
             Ask Questions & Refine Your Plan
           </h3>
           <p className="chat-subtitle">
-            Need adjustments for {profileCity || 'your location'}? Ask about transit delays, school sports, or budget air filtration.
+            Need adjustments for {profileCity || 'your location'}? Ask about transit, school sports, or filtration.
           </p>
         </div>
-        <span className="chat-status-indicator" aria-hidden="true">Multi-Turn AI Active</span>
+        <span className="chat-status-indicator" aria-hidden="true">Domain Guarded</span>
       </div>
 
-      <div className="chat-log-container">
+      <div className="chat-log-container" ref={logContainerRef}>
         {messages.length === 0 ? (
           <div className="chat-empty-state">
             <p>💡 <em>Example questions you can ask:</em></p>
@@ -98,46 +101,40 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
             {messages.map((msg, index) => (
               <ChatBubble key={index} message={msg} />
             ))}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} aria-hidden="true" />
           </ul>
         )}
       </div>
 
       {chatError && (
-        <div className="chat-error-banner" role="alert">
-          <p>{chatError}</p>
+        <div className="chat-error-inline" role="alert">
+          <span>⚠️ {chatError}</span>
         </div>
       )}
 
-      <form className="chat-input-form" onSubmit={handleSend}>
-        <div className="chat-input-wrapper">
-          <label htmlFor="chat-textarea" className="sr-only">
-            Your follow-up question
-          </label>
-          <textarea
-            id="chat-textarea"
-            rows={2}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your question here... (Press Enter to send, Shift+Enter for newline)"
-            className="chat-textarea"
-            maxLength={500}
-            disabled={isSending}
-            aria-describedby="chat-char-count"
-          />
-          <div id="chat-char-count" className="chat-char-count">
-            {inputMessage.length}/500
-          </div>
-        </div>
-
+      <form className="chat-input-form" onSubmit={handleSend} noValidate>
+        <label htmlFor="chat-user-input" className="sr-only">
+          Ask a question about air quality
+        </label>
+        <input
+          id="chat-user-input"
+          type="text"
+          className="chat-input-field"
+          placeholder="Type your question here (e.g. Can we exercise outside this morning?)..."
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isSending}
+          maxLength={500}
+          autoComplete="off"
+        />
         <button
           type="submit"
-          className="chat-send-button"
-          disabled={isSending || !inputMessage.trim()}
-          aria-label={isSending ? 'Sending question to AI' : 'Send question'}
+          className="chat-send-btn"
+          disabled={!inputMessage.trim() || isSending}
+          aria-label="Send question to AI assistant"
         >
-          {isSending ? 'Thinking...' : 'Send ➔'}
+          {isSending ? <span className="chat-spinner" aria-hidden="true"></span> : 'Send ➔'}
         </button>
       </form>
     </section>

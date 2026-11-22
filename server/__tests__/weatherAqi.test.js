@@ -2,6 +2,8 @@ const request = require('supertest');
 const app = require('../app');
 
 describe('Weather & Air Quality Real-Time API Endpoint', () => {
+  jest.setTimeout(15000);
+
   it('GET /api/weather-aqi returns 200 with atmospheric data for valid city', async () => {
     const res = await request(app).get('/api/weather-aqi?city=Delhi');
 

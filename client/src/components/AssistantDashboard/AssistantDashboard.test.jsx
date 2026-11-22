@@ -1,25 +1,10 @@
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import AssistantDashboard from './AssistantDashboard';
 
 describe('AssistantDashboard Component', () => {
-  beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({
-          success: true,
-          atmospheric: {
-            city: 'Delhi',
-            airQuality: { pm2_5: 115, us_aqi: 225, category: 'Very Unhealthy', color: '#9333ea' },
-            weather: { temperature: 21, condition: 'Clear sky', inversionRisk: 'High (Active)' },
-          },
-        }),
-      })
-    ));
-  });
-
-  it('renders top atmospheric ribbon and back button', async () => {
+  it('confirms top bar, back button, and feed badge are cleanly removed from dashboard body', async () => {
     await act(async () => {
       render(
         <AssistantDashboard
@@ -29,15 +14,18 @@ describe('AssistantDashboard Component', () => {
           selectedPreset={null}
           onSubmitForm={vi.fn()}
           onResetPlan={vi.fn()}
-          onBackToLanding={vi.fn()}
           onSelectPreset={vi.fn()}
         />
       );
     });
 
-    expect(screen.getByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Back to overview landing page/i })).toBeInTheDocument();
-    expect(screen.getByText(/Live Open-Meteo Feed/i)).toBeInTheDocument();
+    // Confirms back button, Clean Air Intelligence Hub title, and Live Open-Meteo badge are removed
+    expect(screen.queryByRole('button', { name: /Back to overview/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Live Open-Meteo Feed/i)).not.toBeInTheDocument();
+
+    // The interactive workspace region is active
+    expect(screen.getByRole('region', { name: /Urban Air Quality Interactive Workspace/i })).toBeInTheDocument();
   });
 
   it('renders intake form on left and domain-guarded intro on right when no plan exists', async () => {
@@ -50,13 +38,12 @@ describe('AssistantDashboard Component', () => {
           selectedPreset={null}
           onSubmitForm={vi.fn()}
           onResetPlan={vi.fn()}
-          onBackToLanding={vi.fn()}
           onSelectPreset={vi.fn()}
         />
       );
     });
 
-    expect(screen.getByRole('heading', { level: 2, name: /Personal Profile Intake/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Tell Us About Your Household & Commute/i })).toBeInTheDocument();
     expect(screen.getByText(/Strict Domain-Guarded AI Assistant/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Load Delhi Family/i })).toBeInTheDocument();
   });
@@ -90,7 +77,6 @@ describe('AssistantDashboard Component', () => {
           selectedPreset={null}
           onSubmitForm={vi.fn()}
           onResetPlan={vi.fn()}
-          onBackToLanding={vi.fn()}
           onSelectPreset={vi.fn()}
         />
       );
@@ -100,8 +86,8 @@ describe('AssistantDashboard Component', () => {
     expect(screen.getByRole('heading', { level: 3, name: /Ask Questions & Refine Your Plan/i })).toBeInTheDocument();
   });
 
-  it('calls onBackToLanding when back button is clicked', async () => {
-    const onBack = vi.fn();
+  it('calls onSelectPreset when quick demo preset is clicked', async () => {
+    const onSelect = vi.fn();
     const user = userEvent.setup();
 
     await act(async () => {
@@ -113,14 +99,14 @@ describe('AssistantDashboard Component', () => {
           selectedPreset={null}
           onSubmitForm={vi.fn()}
           onResetPlan={vi.fn()}
-          onBackToLanding={onBack}
-          onSelectPreset={vi.fn()}
+          onSelectPreset={onSelect}
         />
       );
     });
 
-    const backBtn = screen.getByRole('button', { name: /Back to overview landing page/i });
-    await user.click(backBtn);
-    expect(onBack).toHaveBeenCalledTimes(1);
+    const presetBtn = screen.getByRole('button', { name: /Load Delhi Family/i });
+    await user.click(presetBtn);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect.mock.calls[0][0].city).toBe('Delhi');
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import IntakeForm from '../IntakeForm/IntakeForm';
 import ResultsPanel from '../ResultsPanel/ResultsPanel';
 import ChatWidget from '../ChatWidget/ChatWidget';
@@ -11,113 +11,10 @@ function AssistantDashboard({
   selectedPreset,
   onSubmitForm,
   onResetPlan,
-  onBackToLanding,
   onSelectPreset,
 }) {
-  const currentCity = planResult?.profile?.city || selectedPreset?.city || 'Delhi';
-  const [liveAtmospheric, setLiveAtmospheric] = useState(planResult?.atmospheric || null);
-  const [isFetchingWeather, setIsFetchingWeather] = useState(false);
-
-  // Fetch real-time live atmospheric data when city changes or mounts
-  useEffect(() => {
-    let isCancelled = false;
-
-    if (planResult?.atmospheric) {
-      setLiveAtmospheric(planResult.atmospheric);
-      return;
-    }
-
-    const fetchLiveWeather = async () => {
-      setIsFetchingWeather(true);
-      try {
-        const res = await fetch(`/api/weather-aqi?city=${encodeURIComponent(currentCity)}`);
-        const data = await res.json();
-        if (!isCancelled && data.success && data.atmospheric) {
-          setLiveAtmospheric(data.atmospheric);
-        }
-      } catch (err) {
-        console.warn('Weather fetch warning:', err);
-      } finally {
-        if (!isCancelled) setIsFetchingWeather(false);
-      }
-    };
-
-    fetchLiveWeather();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [currentCity, planResult]);
-
-  const aqiCategory = liveAtmospheric?.airQuality?.category || 'Moderate';
-  const aqiColor = liveAtmospheric?.airQuality?.color || '#ca8a04';
-  const usAqi = liveAtmospheric?.airQuality?.us_aqi ?? '—';
-  const pm25 = liveAtmospheric?.airQuality?.pm2_5 ?? '—';
-  const temp = liveAtmospheric?.weather?.temperature ?? '—';
-  const condition = liveAtmospheric?.weather?.condition || 'Winter Weather';
-  const inversionRisk = liveAtmospheric?.weather?.inversionRisk || 'Active Smog Stagnation';
-
   return (
     <div className="assistant-dashboard" role="region" aria-label="Urban Air Quality Interactive Workspace">
-      {/* Top Controls & Real-time Live Atmospheric Ribbon */}
-      <div className="dashboard-top-bar">
-        <div className="dashboard-nav-group">
-          <button
-            type="button"
-            className="back-btn"
-            onClick={onBackToLanding}
-            aria-label="Back to overview landing page"
-          >
-            ← Back to Overview
-          </button>
-          <div className="dashboard-title-area">
-            <h1 className="dashboard-page-title">Clean Air Intelligence Hub</h1>
-            <span className="live-pulse-badge" aria-label="Real-time Open-Meteo connection live">
-              <span className="pulse-dot" aria-hidden="true"></span>
-              Live Open-Meteo Feed
-            </span>
-          </div>
-        </div>
-
-        {/* Real-time Weather & AQI Metrics Card */}
-        <div className="live-atmospheric-card" aria-label={`Real-time atmospheric conditions for ${currentCity}`}>
-          <div className="atmospheric-stat-item">
-            <span className="stat-label">Location</span>
-            <span className="stat-value location-val">📍 {currentCity}</span>
-          </div>
-
-          <div className="atmospheric-stat-item">
-            <span className="stat-label">Weather</span>
-            <span className="stat-value">
-              ⛅ {isFetchingWeather ? 'Updating...' : `${temp}°C • ${condition}`}
-            </span>
-          </div>
-
-          <div className="atmospheric-stat-item">
-            <span className="stat-label">PM2.5 Level</span>
-            <span className="stat-value">🍃 {pm25} µg/m³</span>
-          </div>
-
-          <div className="atmospheric-stat-item aqi-badge-container">
-            <span className="stat-label">US AQI</span>
-            <span
-              className="aqi-chip"
-              style={{ backgroundColor: aqiColor }}
-              title={`AQI: ${usAqi} (${aqiCategory})`}
-            >
-              {usAqi} • {aqiCategory}
-            </span>
-          </div>
-
-          <div className="atmospheric-stat-item inversion-stat">
-            <span className="stat-label">Inversion Stagnation Risk</span>
-            <span className="stat-value inversion-val" title={inversionRisk}>
-              ⚠️ {inversionRisk.includes('High') ? 'High Inversion Risk' : 'Standard Dispersion'}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {apiError && (
         <div className="dashboard-error-banner" role="alert" aria-live="assertive">
           <span className="error-icon" aria-hidden="true">⚠️</span>
@@ -130,18 +27,10 @@ function AssistantDashboard({
         {/* Left Column: Intake Form OR Generated Clean Air Plan */}
         <section
           className="dashboard-left-panel"
-          aria-labelledby={planResult ? 'plan-heading' : 'intake-form-heading'}
+          aria-labelledby={planResult ? 'results-main-heading' : 'intake-form-heading'}
         >
           {!planResult ? (
             <div className="form-wrapper-card">
-              <div className="panel-header-compact">
-                <span className="compact-tag">Step 1 of 2</span>
-                <h2 className="panel-title-compact">Personal Profile Intake</h2>
-                <p className="panel-desc-compact">
-                  Configure your household context to calibrate low-emission timing and indoor filtration.
-                </p>
-              </div>
-
               <IntakeForm
                 onSubmit={onSubmitForm}
                 isLoading={isLoading}
@@ -171,7 +60,7 @@ function AssistantDashboard({
                   Strict Domain-Guarded AI Assistant
                 </div>
 
-                <h3 className="chat-intro-title">Ready to Navigate Winter Smog</h3>
+                <h2 id="chat-heading" className="chat-intro-title">Ready to Navigate Winter Smog</h2>
                 <p className="chat-intro-text">
                   This GenAI assistant is strictly specialized in winter smog navigation, DIY indoor filtration,
                   low-emission routines, and respiratory health. Non-air-quality questions are systematically declined.
@@ -188,7 +77,7 @@ function AssistantDashboard({
                 </div>
 
                 <div className="chat-intro-action">
-                  <p className="quick-start-text">⚡ Want instant evaluation results? Click a preset:</p>
+                  <p className="quick-start-text">⚡ Instant Evaluator Demos (1-Click Run):</p>
                   <div className="quick-start-presets">
                     <button
                       type="button"

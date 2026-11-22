@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
@@ -27,22 +27,28 @@ describe('App Root Component & Two-View Architecture', () => {
     }));
   });
 
-  it('renders the brand title and main hero headline on landing view', () => {
-    render(<App />);
+  it('renders the brand title and main hero headline on landing view', async () => {
+    await act(async () => {
+      render(<App />);
+    });
     expect(screen.getAllByText('Urban Air Quality Assistant').length).toBeGreaterThan(0);
     const mainHeading = screen.getByRole('heading', { level: 1, name: /Navigate Severe Winter Smog/i });
     expect(mainHeading).toBeInTheDocument();
   });
 
-  it('provides a skip to content link for accessibility', () => {
-    render(<App />);
+  it('provides a skip to content link for accessibility', async () => {
+    await act(async () => {
+      render(<App />);
+    });
     const skipLink = screen.getByRole('link', { name: /Skip to main content/i });
     expect(skipLink).toBeInTheDocument();
     expect(skipLink).toHaveAttribute('href', '#main-content');
   });
 
-  it('renders main content container with role="main"', () => {
-    render(<App />);
+  it('renders main content container with role="main"', async () => {
+    await act(async () => {
+      render(<App />);
+    });
     const main = screen.getByRole('main');
     expect(main).toBeInTheDocument();
     expect(main).toHaveAttribute('id', 'main-content');
@@ -50,35 +56,46 @@ describe('App Root Component & Two-View Architecture', () => {
 
   it('navigates from landing page to dedicated assistant page on CTA click', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
 
     // In landing view: form is NOT in the landing page
-    expect(screen.queryByRole('heading', { level: 2, name: /Personal Profile Intake/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /Tell Us About Your Household & Commute/i })).not.toBeInTheDocument();
 
     // Click CTA to open dedicated assistant view
     const ctaBtn = screen.getByRole('button', { name: /Generate Your Clean Air Plan/i });
-    await user.click(ctaBtn);
+    await act(async () => {
+      await user.click(ctaBtn);
+    });
 
-    // Now in dedicated Assistant view
-    expect(screen.getByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Personal Profile Intake/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Back to overview landing page/i })).toBeInTheDocument();
+    // Now in dedicated Assistant view: clean 2-column workspace without top clutter
+    expect(screen.getByRole('region', { name: /Urban Air Quality Interactive Workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Tell Us About Your Household & Commute/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Back to overview/i })).not.toBeInTheDocument();
 
-    // Click back to return to landing
-    const backBtn = screen.getByRole('button', { name: /Back to overview landing page/i });
-    await user.click(backBtn);
+    // Click brand logo to return to landing
+    const brandHome = screen.getByLabelText(/Urban Air Quality Assistant Home/i);
+    await act(async () => {
+      await user.click(brandHome);
+    });
     expect(screen.getByRole('heading', { level: 1, name: /Navigate Severe Winter Smog/i })).toBeInTheDocument();
   });
 
   it('opens dedicated assistant view when clicking an instant evaluator demo preset', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
 
     const presetBtn = screen.getByRole('button', { name: /Delhi Family Commuter/i });
-    await user.click(presetBtn);
+    await act(async () => {
+      await user.click(presetBtn);
+    });
 
     // Dedicated assistant view is now active with form pre-populated
-    expect(screen.getByRole('heading', { level: 1, name: /Clean Air Intelligence Hub/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Urban Air Quality Interactive Workspace/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('New Delhi')).toBeInTheDocument();
   });
 });

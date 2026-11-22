@@ -5,11 +5,19 @@
   background-color: var(--color-bg, #f8fafc);
 }
 
+/* Locked to first screen on assistant mode */
+.app-container.assistant-mode {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
 .app-main-content {
   flex: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .landing-view-wrapper {
@@ -19,6 +27,10 @@
 .assistant-view-wrapper {
   width: 100%;
   flex: 1;
+  min-height: 0;
+  height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }

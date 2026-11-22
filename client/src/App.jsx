@@ -11,6 +11,36 @@ function App() {
   const [planResult, setPlanResult] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [selectedPreset, setSelectedPreset] = useState(null);
+  const [currentCity, setCurrentCity] = useState('Delhi');
+  const [liveAtmospheric, setLiveAtmospheric] = useState(null);
+
+  // Fetch real-time live atmospheric conditions for the active city
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (planResult?.atmospheric) {
+      setLiveAtmospheric(planResult.atmospheric);
+      return;
+    }
+
+    const fetchLiveWeather = async () => {
+      try {
+        const res = await fetch(`/api/weather-aqi?city=${encodeURIComponent(currentCity)}`);
+        const data = await res.json();
+        if (!isCancelled && data.success && data.atmospheric) {
+          setLiveAtmospheric(data.atmospheric);
+        }
+      } catch (err) {
+        console.warn('Atmospheric fetch warning:', err);
+      }
+    };
+
+    fetchLiveWeather();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentCity, planResult]);
 
   // Check health and detect shareable session in URL (?session=<uuid>)
   useEffect(() => {
@@ -30,6 +60,9 @@ function App() {
                 recommendations: data.session.recommendations,
                 chatHistory: data.session.chatHistory || [],
               });
+              if (data.session.profile?.city) {
+                setCurrentCity(data.session.profile.city);
+              }
             } else {
               setApiError('Session link not found or has expired. You can generate a fresh plan below.');
             }
@@ -47,6 +80,9 @@ function App() {
   const handleFormSubmit = async (formData) => {
     setIsLoading(true);
     setApiError(null);
+    if (formData.city) {
+      setCurrentCity(formData.city);
+    }
 
     try {
       const response = await fetch('/api/recommend', {
@@ -64,6 +100,9 @@ function App() {
       }
 
       setPlanResult(data);
+      if (data.atmospheric) {
+        setLiveAtmospheric(data.atmospheric);
+      }
 
       // Update URL query string without reloading page
       if (typeof window !== 'undefined' && data.sessionId) {
@@ -86,32 +125,25 @@ function App() {
     }
   };
 
-  const handlePresetSelect = (preset) => {
-    setSelectedPreset(preset);
-  };
-
   const handleLaunchAssistant = (preset = null) => {
     if (preset) {
       setSelectedPreset(preset);
+      if (preset.city) setCurrentCity(preset.city);
     }
     setView('assistant');
-    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   };
 
   const handleBackToLanding = () => {
     setView('landing');
-    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   };
 
   return (
-    <div className="app-container">
-      {/* Clean Accessible Navigation Bar with Real-time Indicators */}
+    <div className={`app-container ${view === 'assistant' ? 'assistant-mode' : ''}`}>
+      {/* Clean Accessible Navigation Bar with Real-time Indicators in Header */}
       <Navbar
         currentView={view}
+        atmospheric={liveAtmospheric}
+        currentCity={currentCity}
         onNavigateToGenerator={() => handleLaunchAssistant()}
         onNavigateToLanding={handleBackToLanding}
       />
@@ -121,7 +153,10 @@ function App() {
           <div className="landing-view-wrapper">
             {/* Focused Hero Section with 1-Click Preset Demos */}
             <LandingHero
-              onSelectPreset={handlePresetSelect}
+              onSelectPreset={(preset) => {
+                setSelectedPreset(preset);
+                if (preset?.city) setCurrentCity(preset.city);
+              }}
               onLaunchAssistant={(preset) => handleLaunchAssistant(preset)}
             />
 
@@ -138,9 +173,9 @@ function App() {
               selectedPreset={selectedPreset}
               onSubmitForm={handleFormSubmit}
               onResetPlan={handleReset}
-              onBackToLanding={handleBackToLanding}
               onSelectPreset={(preset) => {
                 setSelectedPreset(preset);
+                if (preset?.city) setCurrentCity(preset.city);
                 handleFormSubmit(preset);
               }}
             />
@@ -148,21 +183,23 @@ function App() {
         )}
       </main>
 
-      {/* Clean, Simple Footer */}
-      <footer className="simple-footer" role="contentinfo">
-        <div className="simple-footer-content">
-          <div className="simple-footer-brand">
-            <span className="logo-icon" aria-hidden="true">🍃</span>
-            <span className="simple-footer-title">Urban Air Quality Assistant</span>
+      {/* Clean, Simple Footer shown only on Landing View to guarantee zero scroll on Assistant */}
+      {view === 'landing' && (
+        <footer className="simple-footer" role="contentinfo">
+          <div className="simple-footer-content">
+            <div className="simple-footer-brand">
+              <span className="logo-icon" aria-hidden="true">🍃</span>
+              <span className="simple-footer-title">Urban Air Quality Assistant</span>
+            </div>
+            <p className="simple-footer-tagline">
+              PromptWar Challenge 6 • GenAI-Powered Winter Smog Navigation • Privacy by Design (Zero PII)
+            </p>
+            <p className="simple-footer-copy">
+              © 2026 Urban Air Quality Assistant. Powered by Open-Meteo & Google Gemini 2.0 Flash.
+            </p>
           </div>
-          <p className="simple-footer-tagline">
-            PromptWar Challenge 6 • GenAI-Powered Winter Smog Navigation • Privacy by Design (Zero PII)
-          </p>
-          <p className="simple-footer-copy">
-            © 2026 Urban Air Quality Assistant. Powered by Open-Meteo & Google Gemini 2.0 Flash.
-          </p>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
