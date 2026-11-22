@@ -11,7 +11,7 @@ const env = {
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
   SESSION_TTL_DAYS: parseInt(process.env.SESSION_TTL_DAYS, 10) || 7,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000,
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 10,
 };

@@ -161,7 +161,7 @@ The application communicates directly with the **Open-Meteo Global Air Quality &
 ## 🤖 Generative AI Engine (Google Gemini)
 
 The assistant uses the official Google GenAI SDK (`@google/generative-ai`):
-- **Model**: Defaulting to `gemini-2.0-flash` (or `gemini-2.5-flash` / `gemini-3.5-flash-lite`).
+- **Model**: `gemini-3.5-flash-lite` (Google's fast, low-latency Flash-Lite model).
 - **Prompt Architecture**:
   - **Plain-English Instruction**: Prompted to generate concise, warm, actionable guidance using everyday vocabulary that any family member can immediately understand and put into practice.
   - **Structured JSON Schema**: Enforces schema compliance returning exact pillars, impact assessments, and atmospheric summaries.
@@ -211,7 +211,7 @@ The application is pre-configured for **1-click zero-configuration deployment** 
 4. **Configure Environment Variables**:
    Under **Environment Variables**, add:
    - `GEMINI_API_KEY`: *(Your Google AI Studio API key)*
-   - `GEMINI_MODEL`: `gemini-2.0-flash`
+   - `GEMINI_MODEL`: `gemini-3.5-flash-lite`
    - `NODE_ENV`: `production`
 5. **Click "Deploy"**:
    Vercel will build the frontend into `client/dist` and expose the Express API as a serverless function at `/api/*`.
@@ -265,7 +265,7 @@ cp .env.example .env
 Edit `.env` with your preferred settings:
 ```env
 GEMINI_API_KEY=AIzaSy...your_gemini_key_here
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 PORT=5000
 NODE_ENV=development
 CLIENT_URL=http://localhost:3000
