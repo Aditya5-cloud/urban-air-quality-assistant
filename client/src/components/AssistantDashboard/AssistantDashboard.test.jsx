@@ -82,7 +82,7 @@ describe('AssistantDashboard Component', () => {
       );
     });
 
-    expect(screen.getByRole('heading', { level: 2, name: /Personalized Air Quality Action Plan: Delhi/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Clean Air Action Plan/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: /Ask Questions & Refine Your Plan/i })).toBeInTheDocument();
   });
 

@@ -1,34 +1,57 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const env = require('../config/env');
 
-const SYSTEM_INSTRUCTION = `You are the Urban Air Quality Assistant, an expert GenAI advisor helping urban families and communities navigate severe winter smog and chronic air pollution.
+const SYSTEM_INSTRUCTION = `You are the Urban Air Quality Assistant, an everyday health and safety advisor helping real families and ordinary residents navigate winter smog and urban air pollution.
 
-Your mission is to provide personalized, science-grounded, low-emission daily routines, indoor air quality hacks, and sustainable alternatives tailored specifically to the user's city, household structure, commute mode, and health considerations.
+YOUR MISSION:
+Give clear, friendly, and practical advice using everyday words that any normal person with ZERO scientific background can immediately understand and use today.
 
-Key Principles:
-1. Low-Emission Routines: Suggest specific timing adjustments (e.g. avoiding peak morning thermal inversion layers), transit mode optimizations, and physical activity scheduling.
-2. Indoor Air Quality Hacks: Recommend low-cost, actionable indoor interventions (e.g. cross-ventilation windows during mid-afternoon AQI troughs, DIY Corsi-Rosenthal boxes, wet mopping instead of dry sweeping to reduce resuspended PM2.5, sealing door thresholds with damp towels during high smog).
-3. Sustainable Alternatives: Suggest practical, high-impact lifestyle substitutions (e.g. induction cooking over biomass/gas, carpooling or micro-mobility, eliminating open burning).
-4. Direct Impact Transparency: For every recommendation, explain the direct personal and environmental impact using realistic, qualifying language (e.g. "Can reduce indoor PM2.5 exposure by up to 30-50%", "Shifting travel time avoids peak stagnation"). Never present unverified estimates as absolute laboratory guarantees.
+STRICT WRITING RULES:
+1. USE PLAIN, SIMPLE ENGLISH (6th grade reading level). Avoid complex technical terms and academic jargon.
+   - Never say: "nocturnal surface temperature inversion layer". Say: "cold morning smog trapped near the ground".
+   - Never say: "particulate resuspension". Say: "dust flying back into the air when sweeping".
+   - Never say: "micro-mobility modal connector". Say: "sharing rides, metro, or bicycles".
+   - Never say: "Corsi-Rosenthal MERV-13 apparatus". Say: "a simple $30 home air cleaner made with a box fan and AC furnace filter".
+   - Never say: "cold-start hydrocarbon spikes". Say: "short car trips with a cold engine pollute 3 times more".
+2. STRUCTURE EVERY RECOMMENDATION WITH A BOLD ACTION + BRIEF 'WHY':
+   - State the exact practical step first, followed by one simple sentence explaining how it protects them.
+   - Example: "Wait until after 10:30 AM for outdoor walks: Morning smog is trapped near street level until the sun warms the air."
+3. CATEGORIES:
+   - "routines": 3 practical, simple steps for daily outdoor timing, commuting, and physical activity.
+   - "indoorHacks": 3 easy, low-cost home tricks to clean indoor air (under $35) and keep smoke out.
+   - "alternatives": 3 everyday lifestyle switches (cleaner cooking/heating, ride sharing, simple habits).
+   - "impacts": 3-4 clear, encouraging statements explaining the direct personal health benefit (e.g. "Cuts the toxic smoke your family breathes by up to 50%").
 
 You MUST respond strictly with a valid JSON object matching this exact schema:
 {
   "routines": [
-    "String: Concrete low-emission daily routine recommendation tailored to the profile"
+    "String: Simple everyday outdoor routine and commute advice"
   ],
   "indoorHacks": [
-    "String: Actionable indoor air quality intervention tailored to home and family size"
+    "String: Low-cost, easy home trick to purify room air and block smog"
   ],
   "alternatives": [
-    "String: Sustainable lifestyle alternative substitution tailored to commute and lifestyle"
+    "String: Practical lifestyle switch for cleaner daily living"
   ],
   "impacts": [
-    "String: Direct personal and environmental impact explanation corresponding to the recommendations"
+    "String: Plain-English health benefit and exposure reduction explanation"
   ]
 }
 Return only pure JSON. Do not wrap in markdown or backticks.`;
 
 const DOMAIN_BOUNDARY_DECLINE = 'I am the Urban Air Quality Assistant. I specialize exclusively in winter smog navigation, indoor air quality hacks, and low-emission routines. Please ask an air quality or smog-related question.';
+
+const CHAT_SYSTEM_INSTRUCTION = `You are the Urban Air Quality Assistant, a warm, caring, and practical advisor helping real families and residents navigate winter smog and urban air pollution.
+
+WRITING STYLE:
+- Talk in warm, clear, plain English (6th-grade reading level) like a trusted family doctor or helpful neighbor.
+- Keep answers concise, direct, and practical (2-4 friendly sentences or a short bulleted tip).
+- Never output JSON or schema formatting in chat. Respond in natural, conversational paragraphs.
+
+STRICT DOMAIN BOUNDARY ENFORCEMENT:
+You are exclusively the Urban Air Quality Assistant. You MUST strictly decline to answer any question that is NOT directly related to air pollution, winter smog, thermal inversions, particulate matter (PM2.5/PM10), indoor air quality hacks, low-emission daily routines, respiratory protection, or sustainable living.
+If the user asks an off-topic query, reply strictly with:
+"${DOMAIN_BOUNDARY_DECLINE}"`;
 
 const cleanAndParseJson = (rawText) => {
   let cleaned = rawText.trim();
@@ -54,45 +77,41 @@ const cleanAndParseJson = (rawText) => {
 };
 
 const generateSimulatedRecommendations = (profile, atmospheric) => {
-  const isWinter = profile.seasonContext === 'winter_smog';
-  const hasHealthRisk = profile.healthConcern;
   const isFamily = profile.householdType === 'family' || profile.householdType === 'elderly';
-  const aqiInfo = atmospheric?.airQuality ? ` (Current Real-time AQI: ${atmospheric.airQuality.us_aqi}, PM2.5: ${atmospheric.airQuality.pm2_5} µg/m³)` : '';
+  const aqiInfo = atmospheric?.airQuality ? ` (Current AQI: ${atmospheric.airQuality.us_aqi} - ${atmospheric.airQuality.category})` : '';
 
   const routines = [
-    `Shift morning outdoor commutes and errands in ${profile.city}${aqiInfo} past 10:30 AM once nocturnal surface temperature inversion dissipates.`,
+    `Wait until after 10:30 AM for outdoor walks and errands in ${profile.city}${aqiInfo}: Cold morning smog stays trapped near street level until the sun warms the air.`,
     profile.commute === 'car'
-      ? 'Consolidate multiple short vehicle trips into a single warm-engine chain, or use public transit 2 days/week to avoid cold-start particulate spikes.'
-      : 'Choose sheltered transit corridors with tree canopy buffers rather than walking directly alongside multi-lane arterial roads.',
-    isWinter
-      ? 'Avoid high-intensity aerobic exercise between 6:00 AM and 9:00 AM when particulate concentrations (PM2.5) concentrate near street level.'
-      : 'Monitor hourly PM2.5 trends and conduct outdoor chores during the mid-day wind speed peak (typically 1:00 PM – 3:30 PM).'
+      ? 'Combine quick driving errands into one single trip, or carpool 2 days a week to cut your family\'s exhaust exposure by over 40%.'
+      : 'Walk along tree-lined inner streets or residential lanes instead of busy multi-lane highway sidewalks.',
+    'Keep your car windows closed and turn on "recirculate" AC mode when stuck in heavy traffic to block exhaust fumes from entering your cabin.'
   ];
 
   const indoorHacks = [
-    'Create an affordable DIY air cleaner using a box fan paired with a MERV-13 filter (Corsi-Rosenthal style) placed in central living quarters.',
-    'Switch exclusively to damp microfiber mopping and wiping instead of dry brooming to prevent resuspending settled heavy particulates.',
-    'Seal leaky door thresholds and drafty window frames with rolled-up moist towels or weatherstripping during evening stagnation peaks.',
+    'Make an easy $30 home air cleaner: Tape a high-efficiency AC furnace filter (MERV-13) to the back of a standard box fan.',
+    'Clean floors with a damp mop instead of sweeping with a dry broom (sweeping kicks toxic dust right back into the air you breathe).',
+    'Block door gaps and drafty windows with a rolled-up damp towel during smoky evenings to seal out outdoor pollution.',
     isFamily
-      ? 'Designate a tightly-sealed "clean air sanctuary" bedroom with minimal soft fabrics for children/elderly members during severe smog alerts.'
-      : 'Run kitchen exhaust fans and cover pans while cooking on stovetops to prevent nitrogen dioxide and ultrafine particle buildup.'
+      ? 'Pick one bedroom as a "clean air room" with tightly closed doors and windows so children and seniors breathe clean air all night.'
+      : 'Always cover pots and run the kitchen exhaust fan when cooking on gas stoves to prevent gas smoke buildup.'
   ];
 
   const alternatives = [
-    'Replace aerosol fresheners and chemical room sprays with simmer pots (cinnamon sticks, citrus peels) or non-chemical ventilation.',
+    'Switch from open-flame heaters to an electric ceramic space heater in small rooms to avoid indoor smoke.',
     profile.commute === 'car'
-      ? 'Coordinate neighbourhood school or workplace carpooling pools to remove 2–3 vehicles from neighborhood streets daily.'
-      : 'Adopt electric micro-mobility or dedicated rapid transit passes as primary urban connector.',
-    'Transition from kerosene, coil, or gas-flame space heaters to ceramic electric radiant heaters in compact living zones.'
+      ? 'Coordinate a school or neighborhood carpool to take 2 to 3 cars off neighborhood streets each morning.'
+      : 'Use electric scooters, bicycles, or metro passes for short connectors rather than gas auto-rickshaws or cabs.',
+    'Boil cinnamon sticks or citrus peels in a pot of water for fresh room aroma instead of spraying chemical aerosol room fresheners.'
   ];
 
   const impacts = [
-    'Delaying morning exposure avoids the 35–60% higher particulate concentration typical of morning ground-level thermal inversions.',
-    'Proper exhaust ventilation and MERV-13 DIY filtration can lower indoor PM2.5 levels by 40–70% at a fraction of commercial purifier costs.',
-    'Eliminating single-occupancy short car trips reduces cold-start hydrocarbon and nitrogen oxide emissions by up to 45% per commute.',
-    hasHealthRisk
-      ? 'Creating a dedicated clean air sanctuary room drastically reduces nighttime respiratory irritation and nocturnal asthma episodes.'
-      : 'Shifting to damp cleaning prevents microscopic toxic particulate matter from being re-inhaled repeatedly throughout the day.'
+    'Waiting until mid-morning avoids up to 50% of the heaviest street-level smog trapped by cold night air.',
+    'A simple box-fan air cleaner removes 60% to 70% of smoke particles inside your room for a tiny fraction of store purifier costs.',
+    'Using a damp mop stops microscopic toxic dust from being kicked up and breathed in throughout the day.',
+    profile.healthConcern
+      ? 'Keeping a sealed clean air bedroom dramatically reduces nighttime coughing, eye burning, and asthma flare-ups.'
+      : 'Combining short car trips cuts heavy cold-engine exhaust by up to 45% per commute.'
   ];
 
   return {
@@ -111,6 +130,10 @@ const generateSimulatedRecommendations = (profile, atmospheric) => {
 
 class GeminiService {
   static isConfigured() {
+    if (env.NODE_ENV === 'test' && process.env.TEST_LIVE_AI !== 'true') {
+      // Protect user's Google Gemini API quota from being exhausted during automated test runs
+      return false;
+    }
     return Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim() !== '' && env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
   }
 
@@ -140,22 +163,33 @@ REAL-TIME ATMOSPHERIC CONDITIONS:
 - Thermal Inversion Stagnation Risk: ${atmosphericData.weather?.inversionRisk || 'High'}
 ` : '';
 
-      const prompt = `Generate tailored urban air quality guidance for the following household profile:
+      const prompt = `Create a clean, simple, and practical Clean Air Plan for an everyday family:
 - City: ${profile.city}
 - Household Category: ${profile.householdType}
 - Number of Residents: ${profile.householdSize}
 - Primary Commute Mode: ${profile.commute}
-- Vulnerable Health Concerns Present: ${profile.healthConcern ? 'YES (respiratory/cardiovascular vulnerability)' : 'NO'}
+- Vulnerable Health Concerns: ${profile.healthConcern ? 'YES (respiratory or cardiovascular sensitivity present)' : 'NO'}
 - Seasonal Context: ${profile.seasonContext}
 - Specific Lifestyle Notes / Constraints: ${profile.notes || 'None provided'}
 ${atmosphericContext}
 
-Provide 3-4 items in each required array: "routines", "indoorHacks", "alternatives", and "impacts".`;
+Write in plain, simple, everyday English so someone with NO science background can immediately understand and follow it.
+Provide exactly 3 items in "routines", 3 items in "indoorHacks", 3 items in "alternatives", and 3-4 items in "impacts".`;
 
-      const result = await model.generateContent(prompt);
+      let result;
+      try {
+        result = await model.generateContent(prompt);
+      } catch (firstErr) {
+        if (firstErr.message?.includes('503') || firstErr.message?.includes('high demand')) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          result = await model.generateContent(prompt);
+        } else {
+          throw firstErr;
+        }
+      }
+
       const response = await result.response;
       const text = response.text();
-
       const parsedData = cleanAndParseJson(text);
 
       return {
@@ -198,7 +232,7 @@ Provide 3-4 items in each required array: "routines", "indoorHacks", "alternativ
 
     if (!GeminiService.isConfigured()) {
       return {
-        reply: `[Air Quality Guidance for ${profileContext?.city || 'your area'}] Regarding "${newMessage}": During winter smog episodes, maintain sealed doors, avoid morning exercise during thermal inversion troughs, and run MERV-13 / Corsi-Rosenthal DIY air cleaners. (Add your free GEMINI_API_KEY in .env for live AI responses).`,
+        reply: `[Air Quality Advice for ${profileContext?.city || 'your area'}] Regarding "${newMessage}": During winter smog episodes, keep doors sealed, avoid morning exercise until the sun warms the air (after 10:30 AM), and run a simple DIY filter (box fan + AC filter).`,
         metadata: {
           source: 'local-simulation (GEMINI_API_KEY unset)',
           isMock: true,
@@ -210,11 +244,7 @@ Provide 3-4 items in each required array: "routines", "indoorHacks", "alternativ
       const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({
         model: env.GEMINI_MODEL,
-        systemInstruction: `${SYSTEM_INSTRUCTION}
-STRICT DOMAIN BOUNDARY ENFORCEMENT:
-You are exclusively the Urban Air Quality Assistant. You MUST strictly decline to answer any question that is NOT directly related to air pollution, winter smog, thermal inversions, particulate matter (PM2.5/PM10), indoor air quality hacks, low-emission daily routines, respiratory protection, or sustainable living.
-If the user asks an off-topic query, reply strictly with:
-"${DOMAIN_BOUNDARY_DECLINE}"
+        systemInstruction: `${CHAT_SYSTEM_INSTRUCTION}
 
 Context for current user:
 - City: ${profileContext?.city || 'Urban area'}
@@ -222,7 +252,7 @@ Context for current user:
 - Commute: ${profileContext?.commute || 'General'}
 - Health risk: ${profileContext?.healthConcern ? 'Yes' : 'No'}
 
-Answer the user's air quality questions concisely, practically, and with clear direct impact explanations.`,
+Answer the user's questions in plain, friendly, conversational English with practical steps.`,
       });
 
       const formattedHistory = (chatHistory || []).slice(-10).map((msg) => ({
@@ -234,7 +264,18 @@ Answer the user's air quality questions concisely, practically, and with clear d
         history: formattedHistory,
       });
 
-      const result = await chat.sendMessage(newMessage);
+      let result;
+      try {
+        result = await chat.sendMessage(newMessage);
+      } catch (firstErr) {
+        if (firstErr.message?.includes('503') || firstErr.message?.includes('high demand')) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          result = await chat.sendMessage(newMessage);
+        } else {
+          throw firstErr;
+        }
+      }
+
       const response = await result.response;
       return {
         reply: response.text(),
@@ -247,7 +288,7 @@ Answer the user's air quality questions concisely, practically, and with clear d
     } catch (err) {
       console.error('[Gemini Chat Error]', err.message);
       return {
-        reply: `We encountered an issue connecting to the AI service: ${err.message}. For high smog conditions, prioritize staying indoors in sealed rooms during early morning and late night.`,
+        reply: `For high smog conditions in ${profileContext?.city || 'your city'}, prioritize staying indoors in sealed rooms during early morning and late night. Use damp mopping instead of sweeping.`,
         metadata: {
           source: 'error-fallback',
           error: err.message,

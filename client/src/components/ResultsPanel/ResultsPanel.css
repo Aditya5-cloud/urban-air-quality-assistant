@@ -20,13 +20,20 @@
   gap: 0.75rem;
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.625rem;
   flex-wrap: wrap;
 }
 
 .results-banner-main {
   flex: 1;
   min-width: 220px;
+}
+
+.results-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .results-badge {
@@ -39,7 +46,16 @@
   letter-spacing: 0.05em;
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-sm, 4px);
-  margin-bottom: 0.25rem;
+}
+
+.results-city-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
 }
 
 .results-heading {
@@ -77,6 +93,52 @@
   background: #e2e8f0;
 }
 
+/* Quick Takeaways Strip */
+.plan-quick-summary-strip {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  flex: 1;
+  min-width: 170px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.summary-pill-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.summary-pill-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-pill-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.03em;
+}
+
+.summary-pill-val {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
 .simulation-notice {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
@@ -97,11 +159,12 @@
   font-weight: 600;
 }
 
+/* Cards Grid */
 .cards-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.625rem;
+  margin-bottom: 0.875rem;
 }
 
 .recommend-card {
@@ -116,73 +179,112 @@
 }
 
 .recommend-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
 }
 
 .category-routines {
-  border-top: 3px solid #0f766e;
+  border-left: 4px solid #0f766e;
 }
 
 .category-indoor {
-  border-top: 3px solid #0284c7;
+  border-left: 4px solid #0284c7;
 }
 
 .category-alternatives {
-  border-top: 3px solid #7c3aed;
+  border-left: 4px solid #7c3aed;
 }
 
 .card-header {
-  padding: 0.65rem 0.85rem 0.45rem;
+  padding: 0.55rem 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
 }
 
-.card-icon {
+.card-header-icon-wrap {
   font-size: 1.15rem;
+  line-height: 1;
+}
+
+.card-header-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--color-text, #0f172a);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.1rem 0 0 0;
 }
 
 .recommend-list {
   list-style: none;
-  padding: 0.65rem 0.85rem;
+  padding: 0.55rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.55rem;
   margin: 0;
 }
 
 .recommend-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  align-items: flex-start;
+  gap: 0.45rem;
 }
 
-.recommend-text {
+.item-check-icon {
+  color: #059669;
+  font-weight: 800;
   font-size: 0.8125rem;
-  color: var(--color-text, #0f172a);
-  line-height: 1.45;
-  font-weight: 500;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
-.impact-callout {
-  background: #f8fafc;
-  border-left: 3px solid var(--color-primary, #0d9488);
-  border-radius: 0 4px 4px 0;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.75rem;
-  color: #334155;
+.item-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.recommend-action {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
   line-height: 1.35;
 }
 
-.impact-badge {
+.recommend-reason {
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0.15rem 0 0 0;
+}
+
+.card-impact-footer {
+  background: #f0fdf4;
+  border-top: 1px solid #dcfce7;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #166534;
+}
+
+.impact-footer-badge {
   font-weight: 700;
-  color: var(--color-primary, #0d9488);
+  white-space: nowrap;
+}
+
+.impact-footer-text {
+  font-weight: 500;
+  line-height: 1.3;
 }

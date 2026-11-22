@@ -7,7 +7,6 @@ function ResultsPanel({ planData, onReset }) {
   const headingRef = useRef(null);
 
   useEffect(() => {
-    // Focus management: Shift focus to the results heading so screen readers announce it
     if (headingRef.current) {
       headingRef.current.focus();
     }
@@ -20,18 +19,27 @@ function ResultsPanel({ planData, onReset }) {
   const { profile, recommendations, sessionId, metadata } = planData;
   const { routines, indoorHacks, alternatives, impacts } = recommendations;
 
+  const isLiveAi = metadata && !metadata.isMock;
+
   return (
     <section className="results-panel" aria-labelledby="results-main-heading">
+      {/* Top Banner with Clear Title and Edit Action */}
       <div className="results-banner">
         <div className="results-banner-main">
-          <span className="results-badge" aria-hidden="true">Plan Ready</span>
+          <div className="results-badge-group">
+            <span className="results-badge" aria-hidden="true">
+              {isLiveAi ? '✨ Gemini AI Active' : 'Plan Ready'}
+            </span>
+            <span className="results-city-tag">📍 {profile.city}</span>
+          </div>
           <h2 id="results-main-heading" ref={headingRef} tabIndex="-1" className="results-heading">
-            Personalized Air Quality Action Plan: {profile.city}
+            Clean Air Action Plan
           </h2>
           <p className="results-subheading">
-            Tailored specifically for a {profile.householdType} of {profile.householdSize} with {profile.commute} commute.
+            Simple, practical everyday steps tailored for your {profile.householdType} of {profile.householdSize}.
           </p>
         </div>
+
         <div className="results-banner-actions">
           <button
             type="button"
@@ -39,8 +47,35 @@ function ResultsPanel({ planData, onReset }) {
             className="reset-button"
             aria-label="Edit intake form and create a new plan"
           >
-            ← Modify Intake Details
+            ← Modify Details
           </button>
+        </div>
+      </div>
+
+      {/* Quick Summary Highlights Strip */}
+      <div className="plan-quick-summary-strip" role="region" aria-label="Key plan takeaways">
+        <div className="summary-pill">
+          <span className="summary-pill-icon" aria-hidden="true">⏰</span>
+          <div className="summary-pill-content">
+            <span className="summary-pill-label">Best Outdoor Hours</span>
+            <span className="summary-pill-val">10:30 AM – 4:30 PM (Sun warms air)</span>
+          </div>
+        </div>
+
+        <div className="summary-pill">
+          <span className="summary-pill-icon" aria-hidden="true">🧹</span>
+          <div className="summary-pill-content">
+            <span className="summary-pill-label">Top Cleaning Rule</span>
+            <span className="summary-pill-val">Damp mopping only (No dry brooms)</span>
+          </div>
+        </div>
+
+        <div className="summary-pill">
+          <span className="summary-pill-icon" aria-hidden="true">🛡️</span>
+          <div className="summary-pill-content">
+            <span className="summary-pill-label">Family Health Benefit</span>
+            <span className="summary-pill-val">Cuts daily smog breathing by ~50%</span>
+          </div>
         </div>
       </div>
 
@@ -48,34 +83,37 @@ function ResultsPanel({ planData, onReset }) {
         <div className="simulation-notice" role="note" aria-label="Simulation notice">
           <span className="notice-icon" aria-hidden="true">ℹ️</span>
           <span>
-            Displaying scientifically-grounded local simulation advice. (Set <code>GEMINI_API_KEY</code> in <code>.env</code> to enable live Gemini Flash generation).
+            Displaying offline scientific guidance. (Add your <code>GEMINI_API_KEY</code> in <code>.env</code> for live real-time Gemini generation).
           </span>
         </div>
       )}
 
-      {/* Grid of the 3 core recommendation categories */}
+      {/* Three Clean Action Cards */}
       <div className="cards-grid">
         <RecommendCard
-          title="Low-Emission Daily Routines"
-          icon="🌿"
+          title="Outdoor Schedule & Travel"
+          subtitle="When and how to go out safely"
+          icon="🌅"
           items={routines}
-          impacts={impacts ? [impacts[0]] : []}
+          impacts={impacts && impacts[0] ? [impacts[0]] : []}
           categoryClass="category-routines"
         />
 
         <RecommendCard
-          title="Indoor Air Quality Hacks"
+          title="Clean Air Inside Your Home"
+          subtitle="Easy, low-cost steps to purify your rooms"
           icon="🏠"
           items={indoorHacks}
-          impacts={impacts ? [impacts[1]] : []}
+          impacts={impacts && impacts[1] ? [impacts[1]] : []}
           categoryClass="category-indoor"
         />
 
         <RecommendCard
-          title="Sustainable Alternatives"
-          icon="♻️"
+          title="Simple Everyday Habits"
+          subtitle="Smart lifestyle switches that protect everyone"
+          icon="💡"
           items={alternatives}
-          impacts={impacts ? [impacts[2]] : []}
+          impacts={impacts && impacts[2] ? [impacts[2]] : []}
           categoryClass="category-alternatives"
         />
       </div>

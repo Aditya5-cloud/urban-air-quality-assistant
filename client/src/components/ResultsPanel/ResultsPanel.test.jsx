@@ -13,9 +13,9 @@ describe('ResultsPanel Component', () => {
       commute: 'car',
     },
     recommendations: {
-      routines: ['Shift morning travel past 10 AM.'],
-      indoorHacks: ['Set up DIY box fan filter with MERV-13.'],
-      alternatives: ['Carpool with neighbors.'],
+      routines: ['Wait until after 10:30 AM for outdoor travel: Cold morning smog stays trapped.'],
+      indoorHacks: ['Set up a simple box fan filter: Cleans smoke particles cheaply.'],
+      alternatives: ['Carpool with neighbors: Cuts neighborhood exhaust.'],
       impacts: [
         'Avoids 40% higher ground-level inversion peak.',
         'Reduces indoor PM2.5 by 50%.',
@@ -28,16 +28,16 @@ describe('ResultsPanel Component', () => {
     },
   };
 
-  it('renders the main heading and the 3 core recommendation categories', () => {
+  it('renders the clean main heading and the 3 friendly action categories', () => {
     render(<ResultsPanel planData={mockPlan} onReset={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { level: 2, name: /Personalized Air Quality Action Plan: Delhi/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /Low-Emission Daily Routines/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /Indoor Air Quality Hacks/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /Sustainable Alternatives/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Clean Air Action Plan/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Outdoor Schedule & Travel/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Clean Air Inside Your Home/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Simple Everyday Habits/i })).toBeInTheDocument();
   });
 
-  it('displays the direct impact callout for recommendations', () => {
+  it('displays the direct payoff callout for recommendations', () => {
     render(<ResultsPanel planData={mockPlan} onReset={vi.fn()} />);
 
     expect(screen.getByText(/Avoids 40% higher ground-level inversion peak/i)).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('ResultsPanel Component', () => {
     expect(screen.getByRole('button', { name: /Copy plan link to clipboard/i })).toBeInTheDocument();
   });
 
-  it('calls onReset when user clicks modify intake details', async () => {
+  it('calls onReset when user clicks modify details', async () => {
     const user = userEvent.setup();
     const handleReset = vi.fn();
     render(<ResultsPanel planData={mockPlan} onReset={handleReset} />);
