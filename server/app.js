@@ -1,8 +1,8 @@
 const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
 const morgan = require('morgan');
 const env = require('./config/env');
+const { configureHelmet, configureCors } = require('./middleware/security');
+const { aiRateLimiter, generalRateLimiter } = require('./middleware/rateLimiter');
 const healthRoutes = require('./routes/health');
 const recommendRoutes = require('./routes/recommend');
 const sessionRoutes = require('./routes/session');
@@ -12,46 +12,44 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 // Security HTTP headers
-app.use(
-  helmet({
-    contentSecurityPolicy: false, // Allows flexible integration in dev and testing
-    crossOriginEmbedderPolicy: false,
-  })
-);
+app.use(configureHelmet());
 
-// CORS configuration - allow designated client URL or localhost
-const allowedOrigins = [env.CLIENT_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Blocked by CORS policy'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+// CORS configuration
+app.use(configureCors());
 
-// Request payload size limit to prevent memory exhaustion attacks
+// Rate limit general API traffic
+app.use('/api', generalRateLimiter);
+
+// Payload size limit to prevent memory exhaustion attacks (10kb maximum)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Request logging (skip during test execution)
+// Middleware to catch payload-too-large errors from express.json
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({
+      success: false,
+      error: {
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'Request payload exceeds the maximum allowed limit of 10kb',
+      },
+    });
+  }
+  next(err);
+});
+
+// Request logging (disabled during test suites)
 if (env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Routes
+// Routes - with aiRateLimiter applied to GenAI routes
 app.use('/api', healthRoutes);
-app.use('/api', recommendRoutes);
+app.use('/api', aiRateLimiter, recommendRoutes);
 app.use('/api', sessionRoutes);
-app.use('/api', chatRoutes);
+app.use('/api', aiRateLimiter, chatRoutes);
 
-// Fallback & error handling
+// Fallback & central error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
