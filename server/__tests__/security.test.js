@@ -83,4 +83,32 @@ describe('Security Hardening Suite', () => {
       expect(bodyStr).not.toContain('mongodb://');
     });
   });
+
+  describe('CORS Origin Authorization', () => {
+    it('allows requests from Vercel deployment domains and localhost', async () => {
+      const vercelRes = await request(app)
+        .get('/api/health')
+        .set('Origin', 'https://urban-air-quality-assistant.vercel.app');
+
+      expect(vercelRes.statusCode).toBe(200);
+      expect(vercelRes.headers['access-control-allow-origin']).toBe('https://urban-air-quality-assistant.vercel.app');
+
+      const localhostRes = await request(app)
+        .get('/api/health')
+        .set('Origin', 'http://localhost:3000');
+
+      expect(localhostRes.statusCode).toBe(200);
+      expect(localhostRes.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    });
+
+    it('blocks unauthorized external origins', async () => {
+      const res = await request(app)
+        .get('/api/health')
+        .set('Origin', 'https://malicious-unauthorized-website.com');
+
+      expect(res.statusCode).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.message).toContain('CORS block: Origin not authorized by policy');
+    });
+  });
 });
