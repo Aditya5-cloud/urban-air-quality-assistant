@@ -1,41 +1,29 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import Navbar from './Navbar';
 
 describe('Navbar Component', () => {
-  const mockServerHealth = {
-    status: 'online',
-    message: 'Backend online (DB Connected)',
-  };
-
-  it('renders brand title, skip link, and navigation anchors', () => {
-    render(<Navbar serverHealth={mockServerHealth} onNavigateToGenerator={vi.fn()} />);
+  it('renders brand title, skip link, and weather/air quality indicators', () => {
+    render(<Navbar onNavigateToGenerator={vi.fn()} />);
 
     expect(screen.getByText(/Urban Air Quality Assistant/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Skip to main content/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /3 Pillars/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Why Us/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /FAQ/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Get Plan/i })).toBeInTheDocument();
+    expect(screen.getByText('Weather Condition')).toBeInTheDocument();
+    expect(screen.getByText('Winter Stagnation')).toBeInTheDocument();
+    expect(screen.getByText('Air Quality')).toBeInTheDocument();
+    expect(screen.getByText('PM2.5 Adaptive AI')).toBeInTheDocument();
   });
 
-  it('displays the system online badge', () => {
-    render(<Navbar serverHealth={mockServerHealth} onNavigateToGenerator={vi.fn()} />);
-
-    expect(screen.getByText('System Online')).toBeInTheDocument();
-  });
-
-  it('toggles mobile menu on button click', async () => {
+  it('renders the Get Plan button and handles click', async () => {
     const user = userEvent.setup();
-    render(<Navbar serverHealth={mockServerHealth} onNavigateToGenerator={vi.fn()} />);
+    const handleNavigate = vi.fn();
+    render(<Navbar onNavigateToGenerator={handleNavigate} />);
 
-    const toggleBtn = screen.getByRole('button', { name: /Open navigation menu/i });
-    expect(toggleBtn).toBeInTheDocument();
+    const getPlanBtn = screen.getByRole('link', { name: /Jump to plan generator/i });
+    expect(getPlanBtn).toBeInTheDocument();
 
-    await act(async () => {
-      await user.click(toggleBtn);
-    });
-    expect(screen.getByRole('button', { name: /Close navigation menu/i })).toBeInTheDocument();
+    await user.click(getPlanBtn);
+    expect(handleNavigate).toHaveBeenCalledTimes(1);
   });
 });

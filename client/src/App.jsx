@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navigation/Navbar';
 import LandingHero from './components/LandingHero/LandingHero';
-import PillarsSection from './components/PillarsSection/PillarsSection';
-import ImpactComparison from './components/ImpactComparison/ImpactComparison';
 import IntakeForm from './components/IntakeForm/IntakeForm';
 import ResultsPanel from './components/ResultsPanel/ResultsPanel';
 import ChatWidget from './components/ChatWidget/ChatWidget';
@@ -10,7 +8,6 @@ import FAQSection from './components/FAQSection/FAQSection';
 import './App.css';
 
 function App() {
-  const [serverHealth, setServerHealth] = useState({ status: 'checking', message: 'Connecting to backend...' });
   const [isLoading, setIsLoading] = useState(false);
   const [planResult, setPlanResult] = useState(null);
   const [apiError, setApiError] = useState(null);
@@ -18,25 +15,7 @@ function App() {
 
   // Check health and detect shareable session in URL (?session=<uuid>)
   useEffect(() => {
-    // 1. Backend health check
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.status === 'healthy') {
-          setServerHealth({
-            status: 'online',
-            message: `Backend online (${data.services.database === 'connected' ? 'DB Connected' : 'DB Offline - Fallback Active'})`,
-            db: data.services.database,
-          });
-        } else {
-          setServerHealth({ status: 'degraded', message: 'Backend returned degraded status' });
-        }
-      })
-      .catch((err) => {
-        setServerHealth({ status: 'offline', message: `Backend unreachable (${err.message})` });
-      });
-
-    // 2. Session URL parameter check (?session=<id>)
+    // Session URL parameter check (?session=<id>)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlSessionId = params.get('session');
@@ -122,9 +101,8 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Accessible Navigation Bar */}
+      {/* Clean Accessible Navigation Bar with Weather & AQI Indicators */}
       <Navbar
-        serverHealth={serverHealth}
         onNavigateToGenerator={() => {
           const el = document.getElementById('plan-generator');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -132,16 +110,8 @@ function App() {
       />
 
       <main id="main-content" className="app-main-landing" role="main" tabIndex="-1">
-        {/* Hero Section with Preset Demos */}
+        {/* Focused Hero Section with 1-Click Preset Demos */}
         <LandingHero onSelectPreset={handlePresetSelect} />
-
-        {/* Pillars Section */}
-        <PillarsSection />
-
-        {/* Feature Comparison */}
-        <section id="comparison">
-          <ImpactComparison />
-        </section>
 
         {/* Interactive Workspace / Generator */}
         <section id="plan-generator" className="generator-section" aria-labelledby="generator-heading">
@@ -190,43 +160,19 @@ function App() {
         <FAQSection />
       </main>
 
-      {/* Professional Accessible Footer */}
-      <footer className="landing-footer" role="contentinfo">
-        <div className="footer-content">
-          <div className="footer-brand-col">
-            <div className="footer-logo">
-              <span className="logo-icon" aria-hidden="true">🍃</span>
-              <span className="footer-brand-title">Urban Air Quality Assistant</span>
-            </div>
-            <p className="footer-desc">
-              Built for <strong>PromptWar Virtual Challenge 6</strong>. Empowering families and communities with GenAI-tailored low-emission routines and indoor hacks during severe winter smog episodes.
-            </p>
+      {/* Clean, Simple Footer */}
+      <footer className="simple-footer" role="contentinfo">
+        <div className="simple-footer-content">
+          <div className="simple-footer-brand">
+            <span className="logo-icon" aria-hidden="true">🍃</span>
+            <span className="simple-footer-title">Urban Air Quality Assistant</span>
           </div>
-
-          <div className="footer-links-col">
-            <h4 className="footer-col-title">Navigation</h4>
-            <ul className="footer-links">
-              <li><a href="#pillars">3 Protection Pillars</a></li>
-              <li><a href="#comparison">Generic vs. Assistant</a></li>
-              <li><a href="#plan-generator">Plan Generator</a></li>
-              <li><a href="#faq">Science FAQ</a></li>
-            </ul>
-          </div>
-
-          <div className="footer-links-col">
-            <h4 className="footer-col-title">Engineering Guarantees</h4>
-            <ul className="footer-links">
-              <li><span>✓ WCAG AA Accessibility</span></li>
-              <li><span>✓ 100% Zero-PII Collection</span></li>
-              <li><span>✓ 7-Day MongoDB Auto-TTL</span></li>
-              <li><span>✓ Gemini 2.0 Flash GenAI</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="footer-bottom-bar">
-          <p>© 2026 Urban Air Quality Assistant. Developed for PromptWar Virtual Challenge 6.</p>
-          <p className="footer-a11y-note">Designed and verified for semantic screen-reader accessibility and keyboard operation.</p>
+          <p className="simple-footer-tagline">
+            PromptWar Challenge 6 • GenAI-Powered Winter Smog Navigation • Privacy by Design (Zero PII)
+          </p>
+          <p className="simple-footer-copy">
+            © 2026 Urban Air Quality Assistant. Powered by Google Gemini 2.0 Flash.
+          </p>
         </div>
       </footer>
     </div>

@@ -1,20 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './Navbar.css';
 
-function Navbar({ serverHealth, onNavigateToGenerator }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
-
-  const closeMenu = () => {
-    setMobileMenuOpen(false);
-  };
-
+function Navbar({ onNavigateToGenerator }) {
   const handleGeneratorClick = (e) => {
     e.preventDefault();
-    closeMenu();
     if (onNavigateToGenerator) {
       onNavigateToGenerator();
     } else {
@@ -36,66 +25,33 @@ function Navbar({ serverHealth, onNavigateToGenerator }) {
           </div>
         </div>
 
-        {/* Mobile menu toggle */}
-        <button
-          type="button"
-          className="mobile-toggle-btn"
-          onClick={toggleMenu}
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-controls="primary-navigation"
-        >
-          <span className="hamburger-icon" aria-hidden="true">
-            {mobileMenuOpen ? '✕' : '☰'}
-          </span>
-        </button>
-
-        {/* Navigation links & Status badge */}
-        <nav
-          id="primary-navigation"
-          className={`navbar-nav ${mobileMenuOpen ? 'nav-open' : ''}`}
-          role="navigation"
-          aria-label="Main Navigation"
-        >
-          <ul className="nav-links">
-            <li>
-              <a href="#pillars" onClick={closeMenu} className="nav-link">
-                3 Pillars
-              </a>
-            </li>
-            <li>
-              <a href="#comparison" onClick={closeMenu} className="nav-link">
-                Why Us
-              </a>
-            </li>
-            <li>
-              <a href="#faq" onClick={closeMenu} className="nav-link">
-                FAQ
-              </a>
-            </li>
-            <li>
-              <a
-                href="#plan-generator"
-                onClick={handleGeneratorClick}
-                className="nav-link-cta"
-              >
-                Get Plan ➔
-              </a>
-            </li>
-          </ul>
-
-          <div className="nav-status-wrapper">
-            <span
-              className={`nav-status-pill status-${serverHealth.status}`}
-              role="status"
-              aria-live="polite"
-              title={serverHealth.message}
-            >
-              <span className="status-dot" aria-hidden="true"></span>
-              {serverHealth.status === 'online' ? 'System Online' : 'Connecting...'}
-            </span>
+        {/* Header Weather & Air Quality Status Badges */}
+        <div className="header-indicators" role="region" aria-label="Current atmospheric indicators">
+          <div className="indicator-badge weather-badge" title="Seasonal winter atmospheric condition">
+            <span className="indicator-icon" aria-hidden="true">⛅</span>
+            <div className="indicator-text">
+              <span className="indicator-title">Weather Condition</span>
+              <span className="indicator-val">Winter Stagnation</span>
+            </div>
           </div>
-        </nav>
+
+          <div className="indicator-badge aqi-badge" title="Urban air quality focus">
+            <span className="indicator-icon" aria-hidden="true">🍃</span>
+            <div className="indicator-text">
+              <span className="indicator-title">Air Quality</span>
+              <span className="indicator-val">PM2.5 Adaptive AI</span>
+            </div>
+          </div>
+
+          <a
+            href="#plan-generator"
+            onClick={handleGeneratorClick}
+            className="header-cta-btn"
+            aria-label="Jump to plan generator"
+          >
+            Get Plan ➔
+          </a>
+        </div>
       </div>
     </header>
   );

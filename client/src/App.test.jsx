@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 
-describe('App Root Component & Landing Page', () => {
+describe('App Root Component & Streamlined Landing Page', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn(() =>
       Promise.resolve({
@@ -36,10 +36,15 @@ describe('App Root Component & Landing Page', () => {
     expect(main).toHaveAttribute('id', 'main-content');
   });
 
-  it('renders the 3 pillars, comparison, and FAQ sections on the landing page', () => {
+  it('renders the plan generator workspace and FAQ section', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { level: 2, name: /Three Pillars of Winter Smog Protection/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /Why Traditional Weather Apps Fall Short/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Generate Your Clean Air Plan/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: /Frequently Asked Questions/i })).toBeInTheDocument();
+  });
+
+  it('confirms 3 pillars and why-us sections are cleanly removed from the main flow', () => {
+    render(<App />);
+    expect(screen.queryByRole('heading', { level: 2, name: /Three Pillars of Winter Smog Protection/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /Why Traditional Weather Apps Fall Short/i })).not.toBeInTheDocument();
   });
 });

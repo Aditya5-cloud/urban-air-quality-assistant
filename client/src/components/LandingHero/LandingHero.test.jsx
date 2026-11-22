@@ -4,13 +4,17 @@ import { describe, it, expect, vi } from 'vitest';
 import LandingHero from './LandingHero';
 
 describe('LandingHero Component', () => {
-  it('renders hero headline, badge, and CTA buttons', () => {
+  it('renders hero headline, badge, and primary CTA button', () => {
     render(<LandingHero onSelectPreset={vi.fn()} />);
 
     expect(screen.getByRole('heading', { level: 1, name: /Navigate Severe Winter Smog/i })).toBeInTheDocument();
     expect(screen.getByText(/PromptWar Challenge 6 • GenAI Urban Smog Navigator/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Generate Your Clean Air Plan/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Explore 3 Protection Pillars/i })).toBeInTheDocument();
+
+    const ctaBtn = screen.getByRole('button', { name: /Generate Your Clean Air Plan/i });
+    expect(ctaBtn).toBeInTheDocument();
+
+    // Verify 'Explore 3 Protection Pillars' has been removed
+    expect(screen.queryByRole('button', { name: /Explore 3 Protection Pillars/i })).not.toBeInTheDocument();
   });
 
   it('renders evaluator preset demo buttons and triggers onSelectPreset', async () => {

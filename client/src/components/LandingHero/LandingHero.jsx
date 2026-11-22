@@ -9,13 +9,6 @@ function LandingHero({ onSelectPreset }) {
     }
   };
 
-  const scrollToPillars = () => {
-    const el = document.getElementById('pillars');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const handlePresetClick = (preset) => {
     if (onSelectPreset) {
       onSelectPreset(preset);
@@ -47,16 +40,10 @@ function LandingHero({ onSelectPreset }) {
         <button
           type="button"
           onClick={scrollToGenerator}
-          className="cta-primary-btn"
+          className="cta-primary-btn cta-large-btn"
+          aria-label="Generate Your Clean Air Plan"
         >
           Generate Your Clean Air Plan ➔
-        </button>
-        <button
-          type="button"
-          onClick={scrollToPillars}
-          className="cta-secondary-btn"
-        >
-          Explore 3 Protection Pillars
         </button>
       </div>
 

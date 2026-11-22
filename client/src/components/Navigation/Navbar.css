@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-border);
@@ -16,6 +16,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .navbar-brand {
@@ -49,43 +51,70 @@
   letter-spacing: 0.04em;
 }
 
-.mobile-toggle-btn {
-  display: none;
-  background: transparent;
+/* Weather & Air Quality Header Indicators */
+.header-indicators {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.indicator-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 0.375rem 0.625rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.indicator-badge:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+}
+
+.weather-badge {
+  border-color: #cbd5e1;
+}
+
+.aqi-badge {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.indicator-icon {
   font-size: 1.25rem;
+  line-height: 1;
+}
+
+.indicator-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.indicator-title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.indicator-val {
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--color-text);
-  cursor: pointer;
+  line-height: 1.2;
 }
 
-.navbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.nav-links {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.nav-link {
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  transition: color 0.15s ease;
-}
-
-.nav-link:hover {
+.aqi-badge .indicator-val {
   color: var(--color-primary);
 }
 
-.nav-link-cta {
+.header-cta-btn {
   background: var(--color-primary);
   color: #ffffff;
   text-decoration: none;
@@ -94,84 +123,19 @@
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.nav-link-cta:hover {
+.header-cta-btn:hover {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
-.nav-status-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.nav-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-}
-
-.nav-status-pill.status-online {
-  background: #f0fdf4;
-  color: #15803d;
-  border-color: #bbf7d0;
-}
-
-.nav-status-pill.status-online .status-dot {
-  background: #16a34a;
-}
-
-.nav-status-pill.status-offline {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
-}
-
-.nav-status-pill.status-offline .status-dot {
-  background: #dc2626;
-}
-
-@media (max-width: 768px) {
-  .mobile-toggle-btn {
-    display: block;
-  }
-
-  .navbar-nav {
+@media (max-width: 640px) {
+  .indicator-text {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border-bottom: 1px solid var(--color-border);
-    flex-direction: column;
-    padding: 1.5rem;
-    gap: 1.25rem;
-    box-shadow: var(--shadow-md);
   }
-
-  .navbar-nav.nav-open {
-    display: flex;
-  }
-
-  .nav-links {
-    flex-direction: column;
-    width: 100%;
-    gap: 1rem;
-  }
-
-  .nav-link, .nav-link-cta {
-    display: block;
-    text-align: center;
-    width: 100%;
-    padding: 0.625rem;
+  .indicator-badge {
+    padding: 0.375rem 0.5rem;
   }
 }
