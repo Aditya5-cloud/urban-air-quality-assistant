@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import PropTypes from 'prop-types';
 import './Navbar.css';
 
@@ -9,6 +9,16 @@ function Navbar({
   onNavigateToGenerator = null,
   onNavigateToLanding = null,
 }) {
+  const [highContrast, setHighContrast] = useState(false);
+
+  useEffect(() => {
+    if (highContrast) {
+      document.documentElement.classList.add('a11y-contrast');
+    } else {
+      document.documentElement.classList.remove('a11y-contrast');
+    }
+  }, [highContrast]);
+
   const handleCtaClick = (e) => {
     e.preventDefault();
     if (currentView === 'assistant') {
@@ -29,6 +39,11 @@ function Navbar({
 
   return (
     <header className="navbar-header" role="banner">
+      {/* WCAG SC 2.4.1 Skip Link */}
+      <a href="#results-main-heading" className="skip-link">
+        Skip to main content
+      </a>
+
       <div className="navbar-container">
         <div
           className="navbar-brand"
@@ -82,17 +97,32 @@ function Navbar({
           </div>
         </div>
 
-        {/* CTA Button on Landing View */}
-        {currentView === 'landing' && (
+        {/* Accessibility & Action Controls */}
+        <div className="navbar-a11y-controls">
           <button
             type="button"
-            onClick={handleCtaClick}
-            className="header-cta-btn"
-            aria-label="Jump to plan generator"
+            className={`a11y-toggle-btn ${highContrast ? 'active' : ''}`}
+            onClick={() => setHighContrast(!highContrast)}
+            aria-pressed={highContrast}
+            aria-label="Toggle high contrast display mode"
+            title="Toggle WCAG High Contrast"
           >
-            Get Plan ➔
+            <span aria-hidden="true">👁️</span>
+            <span>{highContrast ? 'High Contrast On' : 'Contrast'}</span>
           </button>
-        )}
+
+          {/* CTA Button on Landing View */}
+          {currentView === 'landing' && (
+            <button
+              type="button"
+              onClick={handleCtaClick}
+              className="header-cta-btn"
+              aria-label="Jump to plan generator"
+            >
+              Get Plan ➔
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -119,4 +149,4 @@ Navbar.propTypes = {
   onNavigateToLanding: PropTypes.func,
 };
 
-export default Navbar;
+export default memo(Navbar);

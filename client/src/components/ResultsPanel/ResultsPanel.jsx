@@ -1,6 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types';
 import RecommendCard from './RecommendCard';
+import AqiTrendSvg from '../common/AqiTrendSvg';
+import CadrCalculator from '../common/CadrCalculator';
+import CommuteComparison from '../common/CommuteComparison';
+import CommunityPledges from '../common/CommunityPledges';
 import './ResultsPanel.css';
 
 function ResultsPanel({ planData = null, onReset }) {
@@ -17,10 +21,13 @@ function ResultsPanel({ planData = null, onReset }) {
     return null;
   }
 
-  const { profile, recommendations, metadata } = planData;
+  const { profile, recommendations, metadata, atmospheric } = planData;
   const { routines, indoorHacks, alternatives, impacts } = recommendations;
 
   const isLiveAi = metadata && !metadata.isMock;
+  const inversionInfo = atmospheric?.weather?.inversionDetails;
+  const currentAqi = atmospheric?.airQuality?.us_aqi ?? 190;
+  const hourlyAqi = atmospheric?.forecast?.hourlyAqi || [];
 
   return (
     <section className="results-panel" aria-labelledby="results-main-heading">
@@ -32,6 +39,11 @@ function ResultsPanel({ planData = null, onReset }) {
               {isLiveAi ? '✨ Gemini AI Active' : 'Plan Ready'}
             </span>
             <span className="results-city-tag">📍 {profile.city}</span>
+            {inversionInfo?.isInversion && (
+              <span className="results-badge text-orange" style={{ background: '#fff7ed', color: '#c2410c' }}>
+                ⚠️ Thermal Inversion Active
+              </span>
+            )}
           </div>
           <h2 id="results-main-heading" ref={headingRef} tabIndex="-1" className="results-heading">
             Clean Air Action Plan
@@ -53,13 +65,26 @@ function ResultsPanel({ planData = null, onReset }) {
         </div>
       </div>
 
+      {/* Atmospheric Inversion Risk Advisory (When Present) */}
+      {inversionInfo?.isInversion && (
+        <div className="inversion-alert-strip" role="alert" style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '0.5rem 0.75rem', marginBottom: '0.625rem', fontSize: '0.75rem', color: '#92400e', display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: '1.35' }}>
+          <span aria-hidden="true">🌡️</span>
+          <div>
+            <strong>Atmospheric Inversion Alert:</strong> {inversionInfo.rationale}{' '}
+            <span>Optimal solar ventilation window: <strong>{inversionInfo.safeVentilationWindow}</strong></span>
+          </div>
+        </div>
+      )}
+
       {/* Quick Summary Highlights Strip */}
       <div className="plan-quick-summary-strip" role="region" aria-label="Key plan takeaways">
         <div className="summary-pill">
           <span className="summary-pill-icon" aria-hidden="true">⏰</span>
           <div className="summary-pill-content">
             <span className="summary-pill-label">Best Outdoor Hours</span>
-            <span className="summary-pill-val">10:30 AM – 4:30 PM (Sun warms air)</span>
+            <span className="summary-pill-val">
+              {inversionInfo?.isInversion ? '1:00 PM – 3:30 PM (Sun breaks inversion)' : '10:30 AM – 4:30 PM (Sun warms air)'}
+            </span>
           </div>
         </div>
 
@@ -79,6 +104,11 @@ function ResultsPanel({ planData = null, onReset }) {
           </div>
         </div>
       </div>
+
+      {/* 12-Hour Atmospheric AQI Trajectory (Native SVG with WCAG Twin Readout) */}
+      {hourlyAqi.length > 0 && (
+        <AqiTrendSvg hourlyAqi={hourlyAqi} city={profile.city} />
+      )}
 
       {metadata?.isMock && (
         <div className="simulation-notice" role="note" aria-label="Simulation notice">
@@ -100,24 +130,35 @@ function ResultsPanel({ planData = null, onReset }) {
           categoryClass="category-routines"
         />
 
-        <RecommendCard
-          title="Clean Air Inside Your Home"
-          subtitle="Easy, low-cost steps to purify your rooms"
-          icon="🏠"
-          items={indoorHacks}
-          impacts={impacts && impacts[1] ? [impacts[1]] : []}
-          categoryClass="category-indoor"
-        />
+        <div className="pillar-column-wrapper">
+          <RecommendCard
+            title="Clean Air Inside Your Home"
+            subtitle="Easy, low-cost steps to purify your rooms"
+            icon="🏠"
+            items={indoorHacks}
+            impacts={impacts && impacts[1] ? [impacts[1]] : []}
+            categoryClass="category-indoor"
+          />
+          {/* Interactive Room CADR Calculator */}
+          <CadrCalculator />
+        </div>
 
-        <RecommendCard
-          title="Simple Everyday Habits"
-          subtitle="Smart lifestyle switches that protect everyone"
-          icon="💡"
-          items={alternatives}
-          impacts={impacts && impacts[2] ? [impacts[2]] : []}
-          categoryClass="category-alternatives"
-        />
+        <div className="pillar-column-wrapper">
+          <RecommendCard
+            title="Simple Everyday Habits"
+            subtitle="Smart lifestyle switches that protect everyone"
+            icon="💡"
+            items={alternatives}
+            impacts={impacts && impacts[2] ? [impacts[2]] : []}
+            categoryClass="category-alternatives"
+          />
+          {/* Interactive Commute Inhaled Dose Comparison */}
+          <CommuteComparison currentAqi={currentAqi} />
+        </div>
       </div>
+
+      {/* Pillar 4: Community Action & Collective Neighborhood Pledges */}
+      <CommunityPledges />
     </section>
   );
 }
@@ -141,8 +182,26 @@ ResultsPanel.propTypes = {
       source: PropTypes.string,
       model: PropTypes.string,
     }),
+    atmospheric: PropTypes.shape({
+      airQuality: PropTypes.shape({
+        us_aqi: PropTypes.number,
+        pm2_5: PropTypes.number,
+      }),
+      weather: PropTypes.shape({
+        inversionDetails: PropTypes.shape({
+          isInversion: PropTypes.bool,
+          severity: PropTypes.string,
+          rationale: PropTypes.string,
+          safeVentilationWindow: PropTypes.string,
+        }),
+      }),
+      forecast: PropTypes.shape({
+        hourlyAqi: PropTypes.arrayOf(PropTypes.number),
+        hourlyPm25: PropTypes.arrayOf(PropTypes.number),
+      }),
+    }),
   }),
   onReset: PropTypes.func.isRequired,
 };
 
-export default ResultsPanel;
+export default memo(ResultsPanel);

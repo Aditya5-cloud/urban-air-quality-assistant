@@ -1,5 +1,6 @@
 const express = require('express');
 const env = require('../config/env');
+const { aiCache } = require('../cache/aiCache');
 
 const router = express.Router();
 
@@ -12,10 +13,12 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: env.NODE_ENV,
+    cache: aiCache.stats(),
     services: {
       database: 'in-memory-ttl',
       geminiConfigured: hasAiKey,
       weatherAqiProvider: 'open-meteo-live',
+      aiCacheProvider: 'sha256-lru',
     },
   });
 });

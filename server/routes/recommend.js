@@ -4,6 +4,7 @@ const { validateRecommend } = require('../validators/recommendValidator');
 const GeminiService = require('../services/gemini');
 const WeatherAqiService = require('../services/weatherAqi');
 const { SessionRepository } = require('../models/Session');
+const { aiCache } = require('../cache/aiCache');
 
 const router = express.Router();
 
@@ -22,8 +23,24 @@ router.post('/recommend', validateRecommend, async (req, res, next) => {
     // Obtain real-time live atmospheric measurements (PM2.5, US AQI, temperature)
     const atmospheric = await WeatherAqiService.getLiveAtmosphericData(profile.city);
 
-    // Obtain GenAI recommendations tailored to user profile and live atmospheric data
-    const aiOutput = await GeminiService.getRecommendations(profile, atmospheric);
+    // Compute deterministic hash key for AI caching
+    const aqiBucket = Math.round((atmospheric?.airQuality?.us_aqi || 150) / 25) * 25;
+    const cacheKey = aiCache.hashKey({
+      city: profile.city.toLowerCase().trim(),
+      householdType: profile.householdType,
+      commute: profile.commute,
+      healthConcern: profile.healthConcern,
+      aqiBucket,
+    });
+
+    let aiOutput = aiCache.get(cacheKey);
+    let isCacheHit = true;
+
+    if (!aiOutput) {
+      isCacheHit = false;
+      aiOutput = await GeminiService.getRecommendations(profile, atmospheric);
+      aiCache.set(cacheKey, aiOutput);
+    }
 
     const sessionId = uuidv4();
     const sessionData = {
@@ -49,7 +66,11 @@ router.post('/recommend', validateRecommend, async (req, res, next) => {
       profile,
       atmospheric,
       recommendations: sessionData.recommendations,
-      metadata: aiOutput.metadata,
+      metadata: {
+        ...(aiOutput.metadata || {}),
+        cached: isCacheHit,
+        cacheKey,
+      },
     });
   } catch (error) {
     next(error);

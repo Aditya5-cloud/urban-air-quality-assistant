@@ -167,3 +167,57 @@
     display: none;
   }
 }
+
+/* ============================================================
+   ACCESSIBILITY EXTENSIONS (WCAG 2.2 LEVEL AA)
+   ============================================================ */
+
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: 1rem;
+  background: #0f172a;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  z-index: 1000;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.navbar-a11y-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.a11y-toggle-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.a11y-toggle-btn:hover {
+  background: #e2e8f0;
+}
+
+.a11y-toggle-btn.active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}

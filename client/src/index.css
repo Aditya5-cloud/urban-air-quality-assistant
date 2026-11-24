@@ -66,3 +66,17 @@ button:disabled {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* High-Contrast Mode for WCAG 2.2 AA / AAA Accessibility */
+html.a11y-contrast {
+  filter: contrast(125%);
+  --color-text: #000000;
+  --color-border: #000000;
+  --color-focus: #0000ff;
+}
+
+html.a11y-contrast button,
+html.a11y-contrast input,
+html.a11y-contrast select {
+  border-width: 2px !important;
+}
