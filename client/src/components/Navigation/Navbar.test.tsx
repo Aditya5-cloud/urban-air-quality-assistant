@@ -2,19 +2,23 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import Navbar from './Navbar';
+import { AtmosphericData } from '../../types';
 
 describe('Navbar Component', () => {
-  const mockAtmospheric = {
+  const mockAtmospheric: AtmosphericData = {
     city: 'Delhi',
     airQuality: {
       pm2_5: 117.6,
       pm10: 119,
       us_aqi: 229,
       category: 'Very Unhealthy',
+      severity: 'severe',
       color: '#9333ea',
     },
     weather: {
       temperature: 22,
+      humidity: 65,
+      windSpeed: 4.2,
       condition: 'Clear sky',
       inversionRisk: 'High (Thermal Inversion Stagnation Active)',
     },

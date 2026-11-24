@@ -1,11 +1,21 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import IntakeForm from '../IntakeForm/IntakeForm';
 import ResultsPanel from '../ResultsPanel/ResultsPanel';
 import ChatWidget from '../ChatWidget/ChatWidget';
+import { PlanResult, UserProfile } from '../../types';
 import './AssistantDashboard.css';
 
-function AssistantDashboard({
+export interface AssistantDashboardProps {
+  planResult?: PlanResult | null;
+  isLoading?: boolean;
+  apiError?: string | null;
+  selectedPreset?: Partial<UserProfile> | null;
+  onSubmitForm: (formData: UserProfile) => void;
+  onResetPlan: () => void;
+  onSelectPreset: (preset: Partial<UserProfile>) => void;
+}
+
+const AssistantDashboard: React.FC<AssistantDashboardProps> = ({
   planResult = null,
   isLoading = false,
   apiError = null,
@@ -13,7 +23,7 @@ function AssistantDashboard({
   onSubmitForm,
   onResetPlan,
   onSelectPreset,
-}) {
+}) => {
   return (
     <div className="assistant-dashboard" role="region" aria-label="Urban Air Quality Interactive Workspace">
       {apiError && (
@@ -140,24 +150,6 @@ function AssistantDashboard({
       </div>
     </div>
   );
-}
-
-AssistantDashboard.propTypes = {
-  planResult: PropTypes.shape({
-    sessionId: PropTypes.string,
-    profile: PropTypes.shape({
-      city: PropTypes.string.isRequired,
-    }),
-    recommendations: PropTypes.object,
-    chatHistory: PropTypes.array,
-    atmospheric: PropTypes.object,
-  }),
-  isLoading: PropTypes.bool,
-  apiError: PropTypes.string,
-  selectedPreset: PropTypes.object,
-  onSubmitForm: PropTypes.func.isRequired,
-  onResetPlan: PropTypes.func.isRequired,
-  onSelectPreset: PropTypes.func.isRequired,
 };
 
 export default AssistantDashboard;

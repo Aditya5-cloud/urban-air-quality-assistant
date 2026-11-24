@@ -1,15 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import ChatBubble from './ChatBubble';
+import { ChatMessage } from '../../types';
 import './ChatWidget.css';
 
-function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
-  const [messages, setMessages] = useState(initialHistory);
+export interface ChatWidgetProps {
+  sessionId: string;
+  initialHistory?: ChatMessage[];
+  profileCity?: string | null;
+}
+
+const ChatWidget: React.FC<ChatWidgetProps> = ({ sessionId, initialHistory = [], profileCity = null }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialHistory);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [chatError, setChatError] = useState(null);
-  const messagesEndRef = useRef(null);
-  const logContainerRef = useRef(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const logContainerRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
     if (logContainerRef.current) {
@@ -23,7 +29,7 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const trimmed = inputMessage.trim();
     if (!trimmed || isSending) return;
@@ -34,10 +40,10 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
     // Prepare prior history (up to last 10 messages) before adding current query
     const historyToSend = messages.slice(-10).map((m) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      text: m.text,
+      text: m.text || m.content || '',
     }));
 
-    const userMessage = { role: 'user', text: trimmed, timestamp: new Date().toISOString() };
+    const userMessage: ChatMessage = { role: 'user', text: trimmed, timestamp: new Date().toISOString() };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputMessage('');
@@ -59,20 +65,21 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
         throw new Error(data.error?.message || 'Failed to obtain AI response');
       }
 
-      const assistantMessage = {
+      const assistantMessage: ChatMessage = {
         role: 'assistant',
         text: data.reply,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err) {
-      setChatError(err.message || 'Chat service encountered an error.');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Chat service encountered an error.';
+      setChatError(errorMsg);
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -106,7 +113,7 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
         ) : (
           <ul className="chat-bubbles-list" role="log" aria-live="polite" aria-label="Conversation messages">
             {messages.map((msg, index) => (
-              <ChatBubble key={msg.timestamp || `msg-${index}`} message={msg} />
+              <ChatBubble key={msg.timestamp ? String(msg.timestamp) : `msg-${index}`} message={msg} />
             ))}
             <div ref={messagesEndRef} aria-hidden="true" />
           </ul>
@@ -146,18 +153,6 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
       </form>
     </section>
   );
-}
-
-ChatWidget.propTypes = {
-  sessionId: PropTypes.string.isRequired,
-  initialHistory: PropTypes.arrayOf(
-    PropTypes.shape({
-      role: PropTypes.oneOf(['user', 'assistant']).isRequired,
-      text: PropTypes.string.isRequired,
-      timestamp: PropTypes.string,
-    })
-  ),
-  profileCity: PropTypes.string,
 };
 
 export default ChatWidget;

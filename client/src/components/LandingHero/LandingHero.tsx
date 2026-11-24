@@ -1,20 +1,25 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { UserProfile } from '../../types';
 import './LandingHero.css';
 
-function LandingHero({ onSelectPreset = null, onLaunchAssistant = null }) {
+export interface LandingHeroProps {
+  onSelectPreset?: ((preset: Partial<UserProfile>) => void) | null;
+  onLaunchAssistant?: ((preset?: Partial<UserProfile> | null) => void) | null;
+}
+
+const LandingHero: React.FC<LandingHeroProps> = ({ onSelectPreset = null, onLaunchAssistant = null }) => {
   const handleLaunch = () => {
     if (onLaunchAssistant) {
       onLaunchAssistant();
     }
   };
 
-  const handlePresetClick = (preset) => {
+  const handlePresetClick = (preset: Partial<UserProfile>) => {
     if (onSelectPreset) {
       onSelectPreset(preset);
     }
     if (onLaunchAssistant) {
-      onLaunchAssistant();
+      onLaunchAssistant(preset);
     }
   };
 
@@ -143,11 +148,6 @@ function LandingHero({ onSelectPreset = null, onLaunchAssistant = null }) {
       </div>
     </section>
   );
-}
-
-LandingHero.propTypes = {
-  onSelectPreset: PropTypes.func,
-  onLaunchAssistant: PropTypes.func,
 };
 
 export default LandingHero;

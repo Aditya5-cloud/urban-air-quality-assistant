@@ -2,15 +2,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import ResultsPanel from './ResultsPanel';
+import { PlanResult } from '../../types';
 
 describe('ResultsPanel Component', () => {
-  const mockPlan = {
+  const mockPlan: PlanResult = {
     sessionId: '550e8400-e29b-41d4-a716-446655440000',
     profile: {
       city: 'Delhi',
       householdType: 'family',
       householdSize: 4,
       commute: 'car',
+      healthConcern: false,
+      seasonContext: 'winter_smog',
     },
     recommendations: {
       routines: ['Wait until after 10:30 AM for outdoor travel: Cold morning smog stays trapped.'],

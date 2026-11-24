@@ -5,6 +5,7 @@
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
-  content: string;
+  text?: string;
+  content?: string;
   timestamp?: string | number;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import './PillarsSection.css';
 
-function PillarsSection() {
+const PillarsSection: React.FC = () => {
   return (
     <section id="pillars" className="pillars-section" aria-labelledby="pillars-heading">
       <div className="section-header">
@@ -81,6 +81,6 @@ function PillarsSection() {
       </div>
     </section>
   );
-}
+};
 
 export default PillarsSection;

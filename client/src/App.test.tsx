@@ -5,7 +5,7 @@ import App from './App';
 
 describe('App Root Component & Two-View Architecture', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn((url) => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
       if (url.includes('/api/weather-aqi')) {
         return Promise.resolve({
           json: () => Promise.resolve({

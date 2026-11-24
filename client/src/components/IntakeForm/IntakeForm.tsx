@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import { UserProfile } from '../../types';
 import './IntakeForm.css';
 
-const DEFAULT_FORM_DATA = {
+export interface IntakeFormProps {
+  onSubmit: (formData: UserProfile) => void;
+  isLoading?: boolean;
+  presetData?: Partial<UserProfile> | null;
+}
+
+const DEFAULT_FORM_DATA: UserProfile = {
   city: '',
   householdType: 'family',
   householdSize: 4,
@@ -12,9 +18,15 @@ const DEFAULT_FORM_DATA = {
   notes: '',
 };
 
-function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
-  const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
-  const [errors, setErrors] = useState({});
+interface FormErrors {
+  city?: string;
+  householdSize?: string;
+  notes?: string;
+}
+
+const IntakeForm: React.FC<IntakeFormProps> = ({ onSubmit, isLoading = false, presetData = null }) => {
+  const [formData, setFormData] = useState<UserProfile>(DEFAULT_FORM_DATA);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   // Sync external preset if provided
   useEffect(() => {
@@ -27,7 +39,7 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
     }
   }, [presetData]);
 
-  const loadPreset = (preset) => {
+  const loadPreset = (preset: Partial<UserProfile>) => {
     setFormData({
       ...DEFAULT_FORM_DATA,
       ...preset,
@@ -35,8 +47,8 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
     setErrors({});
   };
 
-  const validate = () => {
-    const newErrors = {};
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
     if (!formData.city.trim() || formData.city.trim().length < 2) {
       newErrors.city = 'Please enter a valid city name (at least 2 letters).';
     }
@@ -50,28 +62,35 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const target = e.target;
+    const { name, value } = target;
+    const isCheckbox = target.type === 'checkbox';
+    const checked = isCheckbox ? (target as HTMLInputElement).checked : false;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: isCheckbox ? checked : value,
     }));
+
     // Clear field-specific error on change
-    if (errors[name]) {
+    if (errors[name as keyof FormErrors]) {
       setErrors((prev) => {
         const copy = { ...prev };
-        delete copy[name];
+        delete copy[name as keyof FormErrors];
         return copy;
       });
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
       onSubmit({
         ...formData,
-        householdSize: parseInt(formData.householdSize, 10),
+        householdSize: Number(formData.householdSize),
       });
     }
   };
@@ -285,7 +304,7 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
                 id="healthConcern-checkbox"
                 type="checkbox"
                 name="healthConcern"
-                checked={formData.healthConcern}
+                checked={Boolean(formData.healthConcern)}
                 onChange={handleChange}
                 className="form-checkbox"
                 disabled={isLoading}
@@ -309,7 +328,7 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
           <textarea
             id="notes-textarea"
             name="notes"
-            value={formData.notes}
+            value={formData.notes || ''}
             onChange={handleChange}
             maxLength={500}
             rows={3}
@@ -319,7 +338,7 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
             disabled={isLoading}
           />
           <div id="notes-counter" className="char-counter" aria-live="polite">
-            {formData.notes.length} / 500 characters
+            {(formData.notes || '').length} / 500 characters
           </div>
         </div>
       </fieldset>
@@ -344,20 +363,6 @@ function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
       </div>
     </form>
   );
-}
-
-IntakeForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  isLoading: PropTypes.bool,
-  presetData: PropTypes.shape({
-    city: PropTypes.string,
-    householdType: PropTypes.string,
-    householdSize: PropTypes.number,
-    commute: PropTypes.string,
-    healthConcern: PropTypes.bool,
-    seasonContext: PropTypes.string,
-    notes: PropTypes.string,
-  }),
 };
 
 export default IntakeForm;

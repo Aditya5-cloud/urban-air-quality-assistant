@@ -1,12 +1,17 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { ChatMessage } from '../../types';
+
+export interface ChatBubbleProps {
+  message: ChatMessage;
+}
 
 /**
  * ChatBubble renders a single message in the conversation log.
  * Applies distinct styling for 'user' vs 'assistant' roles.
  */
-function ChatBubble({ message }) {
+const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   const isUser = message.role === 'user';
+  const messageText = message.text || message.content || '';
 
   return (
     <li
@@ -17,18 +22,10 @@ function ChatBubble({ message }) {
         <div className="chat-bubble-header">
           <span className="speaker-label">{isUser ? '👤 You' : '🍃 Air Quality Assistant'}</span>
         </div>
-        <p className="chat-bubble-text">{message.text}</p>
+        <p className="chat-bubble-text">{messageText}</p>
       </div>
     </li>
   );
-}
-
-ChatBubble.propTypes = {
-  message: PropTypes.shape({
-    role: PropTypes.oneOf(['user', 'assistant']).isRequired,
-    text: PropTypes.string.isRequired,
-    timestamp: PropTypes.string,
-  }).isRequired,
 };
 
 export default ChatBubble;

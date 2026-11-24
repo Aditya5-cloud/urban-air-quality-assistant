@@ -2,6 +2,7 @@ import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import AssistantDashboard from './AssistantDashboard';
+import { PlanResult } from '../../types';
 
 describe('AssistantDashboard Component', () => {
   it('confirms top bar, back button, and feed badge are cleanly removed from dashboard body', async () => {
@@ -49,7 +50,7 @@ describe('AssistantDashboard Component', () => {
   });
 
   it('renders results panel and active chat widget when planResult is present', async () => {
-    const mockPlan = {
+    const mockPlan: PlanResult = {
       sessionId: '123e4567-e89b-12d3-a456-426614174000',
       profile: {
         city: 'Delhi',

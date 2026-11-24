@@ -67,7 +67,7 @@ router.post('/recommend', validateRecommend, async (req, res, next) => {
       atmospheric,
       recommendations: sessionData.recommendations,
       metadata: {
-        ...(aiOutput.metadata || {}),
+        ...aiOutput.metadata,
         cached: isCacheHit,
         cacheKey,
       },

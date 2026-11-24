@@ -27,7 +27,8 @@ describe('LandingHero Component', () => {
 
     await user.click(delhiPresetBtn);
     expect(handleSelectPreset).toHaveBeenCalledTimes(1);
-    expect(handleSelectPreset.mock.calls[0][0].city).toBe('New Delhi');
+    const firstCall = handleSelectPreset.mock.calls[0][0];
+    expect(firstCall.city).toBe('New Delhi');
   });
 
   it('displays key impact metrics and statistics', () => {

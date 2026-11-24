@@ -3,16 +3,17 @@ import Navbar from './components/Navigation/Navbar';
 import LandingHero from './components/LandingHero/LandingHero';
 import FAQSection from './components/FAQSection/FAQSection';
 import AssistantDashboard from './components/AssistantDashboard/AssistantDashboard';
+import { PlanResult, AtmosphericData, UserProfile } from './types';
 import './App.css';
 
-function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'assistant'
+const App: React.FC = () => {
+  const [view, setView] = useState<'landing' | 'assistant'>('landing');
   const [isLoading, setIsLoading] = useState(false);
-  const [planResult, setPlanResult] = useState(null);
-  const [apiError, setApiError] = useState(null);
-  const [selectedPreset, setSelectedPreset] = useState(null);
+  const [planResult, setPlanResult] = useState<PlanResult | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<Partial<UserProfile> | null>(null);
   const [currentCity, setCurrentCity] = useState('Delhi');
-  const [liveAtmospheric, setLiveAtmospheric] = useState(null);
+  const [liveAtmospheric, setLiveAtmospheric] = useState<AtmosphericData | null>(null);
 
   // Fetch real-time live atmospheric conditions for the active city
   useEffect(() => {
@@ -30,7 +31,7 @@ function App() {
         if (!isCancelled && data.success && data.atmospheric) {
           setLiveAtmospheric(data.atmospheric);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.warn('Atmospheric fetch warning:', err);
       }
     };
@@ -67,7 +68,7 @@ function App() {
               setApiError('Session link not found or has expired. You can generate a fresh plan below.');
             }
           })
-          .catch((err) => {
+          .catch((err: Error) => {
             setApiError(`Could not load session (${err.message}).`);
           })
           .finally(() => {
@@ -77,7 +78,7 @@ function App() {
     }
   }, []);
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (formData: UserProfile) => {
     setIsLoading(true);
     setApiError(null);
     if (formData.city) {
@@ -109,8 +110,9 @@ function App() {
         const newUrl = `${window.location.pathname}?session=${data.sessionId}`;
         window.history.pushState({ sessionId: data.sessionId }, '', newUrl);
       }
-    } catch (err) {
-      setApiError(err.message || 'Failed to generate air quality plan. Please try again.');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to generate air quality plan. Please try again.';
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +127,7 @@ function App() {
     }
   };
 
-  const handleLaunchAssistant = (preset = null) => {
+  const handleLaunchAssistant = (preset: Partial<UserProfile> | null = null) => {
     if (preset) {
       setSelectedPreset(preset);
       if (preset.city) setCurrentCity(preset.city);
@@ -148,7 +150,7 @@ function App() {
         onNavigateToLanding={handleBackToLanding}
       />
 
-      <main id="main-content" className="app-main-content" role="main" tabIndex="-1">
+      <main id="main-content" className="app-main-content" role="main" tabIndex={-1}>
         {view === 'landing' ? (
           <div className="landing-view-wrapper">
             {/* Focused Hero Section with 1-Click Preset Demos */}
@@ -176,7 +178,7 @@ function App() {
               onSelectPreset={(preset) => {
                 setSelectedPreset(preset);
                 if (preset?.city) setCurrentCity(preset.city);
-                handleFormSubmit(preset);
+                handleFormSubmit(preset as UserProfile);
               }}
             />
           </div>
@@ -202,6 +204,6 @@ function App() {
       )}
     </div>
   );
-}
+};
 
 export default App;

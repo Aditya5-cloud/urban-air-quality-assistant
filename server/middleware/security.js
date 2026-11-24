@@ -66,7 +66,7 @@ const configureCors = () => {
         ) {
           return callback(null, true);
         }
-      } catch (err) {
+      } catch {
         // invalid URL format
       }
 
