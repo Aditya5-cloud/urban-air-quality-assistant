@@ -19,16 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Root Dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: Install Server Dependencies
-        run: cd server && (npm ci || npm install)
+        run: npm --prefix server install
 
       - name: Install Client Dependencies
-        run: cd client && (npm ci || npm install)
+        run: npm --prefix client install
 
       - name: Lint Server Codebase
         run: npm run lint:server
