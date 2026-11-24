@@ -181,15 +181,17 @@ describe('airPhysics - Pure Environmental Compute Engine', () => {
       expect(cycling).toBeDefined();
       expect(car).toBeDefined();
 
-      // Metro should have lower inhaled dose than cycling in high AQI
-      expect(metro.inhaledDoseUg).toBeLessThan(cycling.inhaledDoseUg);
-      // Cycling has 0 direct CO2 emissions
-      expect(cycling.co2Kg).toBe(0);
-      // Car has highest CO2 emissions
-      expect(car.co2Kg).toBeGreaterThan(metro.co2Kg);
-      // Metro should be recommended in high AQI (250)
-      expect(metro.isRecommended).toBe(true);
-      expect(cycling.isRecommended).toBe(false);
+      if (metro && cycling && car) {
+        // Metro should have lower inhaled dose than cycling in high AQI
+        expect(metro.inhaledDoseUg).toBeLessThan(cycling.inhaledDoseUg);
+        // Cycling has 0 direct CO2 emissions
+        expect(cycling.co2Kg).toBe(0);
+        // Car has highest CO2 emissions
+        expect(car.co2Kg).toBeGreaterThan(metro.co2Kg);
+        // Metro should be recommended in high AQI (250)
+        expect(metro.isRecommended).toBe(true);
+        expect(cycling.isRecommended).toBe(false);
+      }
     });
 
     it('throws RangeError for non-positive distance or negative AQI', () => {

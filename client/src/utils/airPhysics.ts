@@ -1,18 +1,24 @@
 /**
- * @file airPhysics.js
+ * @file airPhysics.ts
  * Pure, side-effect-free environmental physics and air quality compute engine.
  * Implements EPA linear piecewise interpolation, ASHRAE 4-5 ACH ventilation standards,
  * single-compartment particle clearance decay kinetics, inhaled microgram dose calculations,
  * and boundary-layer thermal inversion lapse rate modeling.
  */
 
+import type {
+  BreakpointRange,
+  CommuteConfig,
+  CommuteComparisonOption,
+  InversionRiskAssessment,
+  CommunityOffsetResult,
+} from '../types';
+
 /**
  * Validates that a value is a finite number.
- * @param {unknown} val
- * @param {string} name
  * @throws {TypeError} If not a finite number
  */
-export function assertFiniteNumber(val, name) {
+export function assertFiniteNumber(val: unknown, name: string): asserts val is number {
   if (typeof val !== 'number' || !Number.isFinite(val)) {
     throw new TypeError(`Expected ${name} to be a finite number, received: ${val}`);
   }
@@ -20,11 +26,9 @@ export function assertFiniteNumber(val, name) {
 
 /**
  * Validates that a value is strictly positive (> 0).
- * @param {number} val
- * @param {string} name
  * @throws {RangeError} If not strictly positive
  */
-export function assertPositive(val, name) {
+export function assertPositive(val: number, name: string): void {
   assertFiniteNumber(val, name);
   if (val <= 0) {
     throw new RangeError(`Expected ${name} to be strictly positive (> 0), received: ${val}`);
@@ -34,7 +38,7 @@ export function assertPositive(val, name) {
 /**
  * EPA Breakpoint definitions for PM2.5 (24-hour average, ug/m3).
  */
-export const PM25_BREAKPOINTS = [
+export const PM25_BREAKPOINTS: readonly BreakpointRange[] = [
   { cLow: 0.0, cHigh: 12.0, iLow: 0, iHigh: 50, category: 'Good', color: '#15803d' },
   { cLow: 12.1, cHigh: 35.4, iLow: 51, iHigh: 100, category: 'Moderate', color: '#ca8a04' },
   { cLow: 35.5, cHigh: 55.4, iLow: 101, iHigh: 150, category: 'Unhealthy for Sensitive Groups', color: '#ea580c' },
@@ -46,10 +50,8 @@ export const PM25_BREAKPOINTS = [
 /**
  * Calculates US AQI from PM2.5 concentration using EPA linear piecewise interpolation:
  * I = [(I_high - I_low) / (C_high - C_low)] * (C - C_low) + I_low
- * @param {number} pm25 - PM2.5 concentration in ug/m3.
- * @returns {number} Integer AQI value (0-500).
  */
-export function calculatePM25AQI(pm25) {
+export function calculatePM25AQI(pm25: number): number {
   assertFiniteNumber(pm25, 'pm25');
   if (pm25 < 0) {
     throw new RangeError(`PM2.5 concentration cannot be negative, received: ${pm25}`);
@@ -71,10 +73,8 @@ export function calculatePM25AQI(pm25) {
 
 /**
  * Returns EPA category and severity metadata for a given AQI value.
- * @param {number} aqi
- * @returns {{category: string, severity: string, color: string}}
  */
-export function getAQICategory(aqi) {
+export function getAQICategory(aqi: number): { category: string; severity: string; color: string } {
   assertFiniteNumber(aqi, 'aqi');
   if (aqi < 0) {
     throw new RangeError(`AQI cannot be negative, received: ${aqi}`);
@@ -90,11 +90,8 @@ export function getAQICategory(aqi) {
 
 /**
  * Calculates room volume in cubic meters.
- * @param {number} areaSqM - Floor area in square meters.
- * @param {number} heightM - Ceiling height in meters.
- * @returns {number} Volume in m3.
  */
-export function calculateRoomVolume(areaSqM, heightM) {
+export function calculateRoomVolume(areaSqM: number, heightM: number): number {
   assertPositive(areaSqM, 'areaSqM');
   assertPositive(heightM, 'heightM');
   return Math.round(areaSqM * heightM * 100) / 100;
@@ -103,11 +100,8 @@ export function calculateRoomVolume(areaSqM, heightM) {
 /**
  * Calculates required Clean Air Delivery Rate (CADR in m3/h) to achieve target Air Changes per Hour (ACH).
  * Standard ASHRAE recommends at least 4 to 5 ACH for severe winter smog and wildfire events.
- * @param {number} volumeM3 - Room volume in cubic meters.
- * @param {number} [desiredACH=4] - Target air changes per hour.
- * @returns {number} Required CADR in m3/h.
  */
-export function calculateRequiredCADR(volumeM3, desiredACH = 4) {
+export function calculateRequiredCADR(volumeM3: number, desiredACH = 4): number {
   assertPositive(volumeM3, 'volumeM3');
   assertPositive(desiredACH, 'desiredACH');
   return Math.round(volumeM3 * desiredACH);
@@ -117,12 +111,12 @@ export function calculateRequiredCADR(volumeM3, desiredACH = 4) {
  * Estimates time (in minutes) required to reduce indoor airborne particulate by target efficiency (default 80%).
  * Uses single-compartment mass balance first-order decay:
  * t = (-ln(1 - efficiency) * V / CADR) * 60
- * @param {number} volumeM3 - Room volume in cubic meters.
- * @param {number} cadrM3H - Clean Air Delivery Rate in m3/h.
- * @param {number} [targetEfficiency=0.8] - Desired particulate reduction (0 to 1).
- * @returns {number} Minutes required for clearance.
  */
-export function estimatePurificationTime(volumeM3, cadrM3H, targetEfficiency = 0.8) {
+export function estimatePurificationTime(
+  volumeM3: number,
+  cadrM3H: number,
+  targetEfficiency = 0.8
+): number {
   assertPositive(volumeM3, 'volumeM3');
   assertPositive(cadrM3H, 'cadrM3H');
   assertFiniteNumber(targetEfficiency, 'targetEfficiency');
@@ -140,18 +134,13 @@ export function estimatePurificationTime(volumeM3, cadrM3H, targetEfficiency = 0
 /**
  * Calculates inhaled PM2.5 exposure dose in micrograms (ug).
  * Formula: Dose = Concentration (ug/m3) * Time (hours) * BreathingRate (m3/h) * (1 - InfiltrationProtection)
- * @param {number} pm25UgM3 - Particulate concentration.
- * @param {number} durationHours - Exposure duration in hours.
- * @param {number} breathingRateM3H - Minute respiratory volume in m3/h.
- * @param {number} [protectionFactor=0] - Filter or mask protection (0 to 1).
- * @returns {number} Inhaled dose in micrograms.
  */
 export function calculateExposureDose(
-  pm25UgM3,
-  durationHours,
-  breathingRateM3H,
+  pm25UgM3: number,
+  durationHours: number,
+  breathingRateM3H: number,
   protectionFactor = 0
-) {
+): number {
   assertFiniteNumber(pm25UgM3, 'pm25UgM3');
   assertFiniteNumber(durationHours, 'durationHours');
   assertFiniteNumber(breathingRateM3H, 'breathingRateM3H');
@@ -171,7 +160,7 @@ export function calculateExposureDose(
 /**
  * Commute transit configurations for exposure dose and emission comparisons.
  */
-export const COMMUTE_MODES = {
+export const COMMUTE_MODES: Record<string, CommuteConfig> = {
   metro: { label: 'Underground Metro', speedKmH: 35, breathingRate: 0.6, protection: 0.75, co2PerKm: 0.02 },
   bus: { label: 'AC Electric / City Bus', speedKmH: 20, breathingRate: 0.6, protection: 0.6, co2PerKm: 0.05 },
   car: { label: 'Gasoline Car (Cabin Sealed)', speedKmH: 25, breathingRate: 0.5, protection: 0.65, co2PerKm: 0.19 },
@@ -181,11 +170,11 @@ export const COMMUTE_MODES = {
 
 /**
  * Computes multi-modal commute trade-offs for a given travel distance and ambient air quality index.
- * @param {number} distanceKm - Commute distance in km.
- * @param {number} ambientAQI - Ambient AQI.
- * @returns {Array<{mode: string, label: string, durationMinutes: number, inhaledDoseUg: number, co2Kg: number, healthRisk: string, isRecommended: boolean}>}
  */
-export function calculateMultiModalCommute(distanceKm, ambientAQI) {
+export function calculateMultiModalCommute(
+  distanceKm: number,
+  ambientAQI: number
+): CommuteComparisonOption[] {
   assertPositive(distanceKm, 'distanceKm');
   assertFiniteNumber(ambientAQI, 'ambientAQI');
   if (ambientAQI < 0) throw new RangeError(`AQI cannot be negative: ${ambientAQI}`);
@@ -224,12 +213,12 @@ export function calculateMultiModalCommute(distanceKm, ambientAQI) {
 /**
  * Evaluates meteorological conditions for winter thermal inversion risk.
  * Atmospheric inversion occurs when cold surface air is trapped beneath a warmer boundary layer with low wind.
- * @param {number} tempSurfaceC - Surface ambient temperature in Celsius.
- * @param {number} tempAloftC - Temperature aloft (e.g. at 500m-1000m boundary) in Celsius.
- * @param {number} windSpeedKmh - Surface wind speed in km/h.
- * @returns {{isInversion: boolean, severity: 'none' | 'moderate' | 'severe', lapseRate: number, rationale: string, safeVentilationWindow: string}}
  */
-export function evaluateInversionRisk(tempSurfaceC, tempAloftC, windSpeedKmh) {
+export function evaluateInversionRisk(
+  tempSurfaceC: number,
+  tempAloftC: number,
+  windSpeedKmh: number
+): InversionRiskAssessment {
   assertFiniteNumber(tempSurfaceC, 'tempSurfaceC');
   assertFiniteNumber(tempAloftC, 'tempAloftC');
   assertFiniteNumber(windSpeedKmh, 'windSpeedKmh');
@@ -268,7 +257,7 @@ export function evaluateInversionRisk(tempSurfaceC, tempAloftC, windSpeedKmh) {
 /**
  * Community emission offset weights for neighborhood pledges.
  */
-export const PLEDGE_WEIGHTS = {
+export const PLEDGE_WEIGHTS: Record<string, { label: string; co2Kg: number; pm25Grams: number }> = {
   carpool: { label: 'Carpooling / Metro Commute', co2Kg: 4.8, pm25Grams: 22 },
   cleanHeating: { label: 'Electric Heating Switch (No Open Flame)', co2Kg: 12.0, pm25Grams: 140 },
   dampMopping: { label: 'Damp Mopping (Anti-Resuspension)', co2Kg: 1.5, pm25Grams: 85 },
@@ -278,10 +267,10 @@ export const PLEDGE_WEIGHTS = {
 
 /**
  * Computes collective community carbon and particulate emission offset.
- * @param {Record<string, number>} pledgeCounts - Map of pledge key to participant counts.
- * @returns {{totalCo2Kg: number, totalPm25Grams: number}}
  */
-export function calculateCommunityOffset(pledgeCounts) {
+export function calculateCommunityOffset(
+  pledgeCounts: Record<string, number> | null | undefined
+): CommunityOffsetResult {
   if (!pledgeCounts || typeof pledgeCounts !== 'object') {
     return { totalCo2Kg: 0, totalPm25Grams: 0 };
   }

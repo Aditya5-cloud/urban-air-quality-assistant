@@ -1,14 +1,19 @@
 import React, { useEffect, useRef, memo } from 'react';
-import PropTypes from 'prop-types';
 import RecommendCard from './RecommendCard';
 import AqiTrendSvg from '../common/AqiTrendSvg';
 import CadrCalculator from '../common/CadrCalculator';
 import CommuteComparison from '../common/CommuteComparison';
 import CommunityPledges from '../common/CommunityPledges';
+import type { PlanResult } from '../../types';
 import './ResultsPanel.css';
 
-function ResultsPanel({ planData = null, onReset }) {
-  const headingRef = useRef(null);
+export interface ResultsPanelProps {
+  planData?: PlanResult | null;
+  onReset: () => void;
+}
+
+function ResultsPanel({ planData = null, onReset }: ResultsPanelProps): React.ReactElement | null {
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
     // Focus without scrolling the page
@@ -45,7 +50,7 @@ function ResultsPanel({ planData = null, onReset }) {
               </span>
             )}
           </div>
-          <h2 id="results-main-heading" ref={headingRef} tabIndex="-1" className="results-heading">
+          <h2 id="results-main-heading" ref={headingRef} tabIndex={-1} className="results-heading">
             Clean Air Action Plan
           </h2>
           <p className="results-subheading">
@@ -162,46 +167,5 @@ function ResultsPanel({ planData = null, onReset }) {
     </section>
   );
 }
-
-ResultsPanel.propTypes = {
-  planData: PropTypes.shape({
-    sessionId: PropTypes.string,
-    profile: PropTypes.shape({
-      city: PropTypes.string.isRequired,
-      householdType: PropTypes.string.isRequired,
-      householdSize: PropTypes.number.isRequired,
-    }).isRequired,
-    recommendations: PropTypes.shape({
-      routines: PropTypes.arrayOf(PropTypes.string).isRequired,
-      indoorHacks: PropTypes.arrayOf(PropTypes.string).isRequired,
-      alternatives: PropTypes.arrayOf(PropTypes.string).isRequired,
-      impacts: PropTypes.arrayOf(PropTypes.string).isRequired,
-    }).isRequired,
-    metadata: PropTypes.shape({
-      isMock: PropTypes.bool,
-      source: PropTypes.string,
-      model: PropTypes.string,
-    }),
-    atmospheric: PropTypes.shape({
-      airQuality: PropTypes.shape({
-        us_aqi: PropTypes.number,
-        pm2_5: PropTypes.number,
-      }),
-      weather: PropTypes.shape({
-        inversionDetails: PropTypes.shape({
-          isInversion: PropTypes.bool,
-          severity: PropTypes.string,
-          rationale: PropTypes.string,
-          safeVentilationWindow: PropTypes.string,
-        }),
-      }),
-      forecast: PropTypes.shape({
-        hourlyAqi: PropTypes.arrayOf(PropTypes.number),
-        hourlyPm25: PropTypes.arrayOf(PropTypes.number),
-      }),
-    }),
-  }),
-  onReset: PropTypes.func.isRequired,
-};
 
 export default memo(ResultsPanel);

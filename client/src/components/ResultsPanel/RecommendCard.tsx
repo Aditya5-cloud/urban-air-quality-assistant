@@ -1,7 +1,22 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { memo } from 'react';
 
-function RecommendCard({ title, subtitle = null, icon, items, impacts = [], categoryClass }) {
+export interface RecommendCardProps {
+  title: string;
+  subtitle?: string | null;
+  icon: string;
+  items: string[];
+  impacts?: string[];
+  categoryClass: string;
+}
+
+function RecommendCard({
+  title,
+  subtitle = null,
+  icon,
+  items,
+  impacts = [],
+  categoryClass,
+}: RecommendCardProps): React.ReactElement | null {
   if (!items || items.length === 0) return null;
 
   return (
@@ -21,7 +36,7 @@ function RecommendCard({ title, subtitle = null, icon, items, impacts = [], cate
           // Parse "Action: Reason" format if present for clean visual separation
           const hasColon = typeof item === 'string' && item.includes(':');
           let actionText = item;
-          let reasonText = null;
+          let reasonText: string | null = null;
 
           if (hasColon) {
             const parts = item.split(':');
@@ -51,13 +66,4 @@ function RecommendCard({ title, subtitle = null, icon, items, impacts = [], cate
   );
 }
 
-RecommendCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  subtitle: PropTypes.string,
-  icon: PropTypes.string.isRequired,
-  items: PropTypes.arrayOf(PropTypes.string).isRequired,
-  impacts: PropTypes.arrayOf(PropTypes.string),
-  categoryClass: PropTypes.string.isRequired,
-};
-
-export default RecommendCard;
+export default memo(RecommendCard);

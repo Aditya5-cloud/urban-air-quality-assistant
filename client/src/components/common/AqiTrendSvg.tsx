@@ -1,5 +1,9 @@
 import React, { memo } from 'react';
-import PropTypes from 'prop-types';
+
+export interface AqiTrendSvgProps {
+  hourlyAqi?: number[];
+  city?: string;
+}
 
 /**
  * Native SVG 12-hour AQI Trend Visualizer.
@@ -7,7 +11,7 @@ import PropTypes from 'prop-types';
  * - Visual SVG marked with aria-hidden="true" role="presentation"
  * - Paired with adjacent .sr-only structured text alternative for screen readers.
  */
-function AqiTrendSvg({ hourlyAqi = [], city = 'Selected City' }) {
+function AqiTrendSvg({ hourlyAqi = [], city = 'Selected City' }: AqiTrendSvgProps): React.ReactElement | null {
   if (!hourlyAqi || hourlyAqi.length === 0) {
     return null;
   }
@@ -64,7 +68,7 @@ function AqiTrendSvg({ hourlyAqi = [], city = 'Selected City' }) {
           </defs>
           <path d={areaD} fill="url(#aqiTrendGrad)" />
           <path d={pathD} fill="none" stroke="#ea580c" strokeWidth="2.5" strokeLinecap="round" />
-          {hourlyAqi.map((aqi, idx) => {
+          {hourlyAqi.map((_aqi, idx) => {
             const [cx, cy] = points[idx].split(',');
             return (
               <circle
@@ -83,10 +87,5 @@ function AqiTrendSvg({ hourlyAqi = [], city = 'Selected City' }) {
     </div>
   );
 }
-
-AqiTrendSvg.propTypes = {
-  hourlyAqi: PropTypes.arrayOf(PropTypes.number),
-  city: PropTypes.string,
-};
 
 export default memo(AqiTrendSvg);

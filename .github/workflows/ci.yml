@@ -35,6 +35,9 @@ jobs:
       - name: Lint Client Codebase
         run: npm run lint:client
 
+      - name: Type Check Client Codebase (tsc)
+        run: npm run typecheck
+
       - name: Run Client Test Suite (Vitest)
         run: npm run test:client
 

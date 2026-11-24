@@ -1,11 +1,15 @@
 import React, { useState, useMemo, memo } from 'react';
-import PropTypes from 'prop-types';
 import { calculateMultiModalCommute } from '../../utils/airPhysics';
+import type { CommuteComparisonOption } from '../../types';
 
-function CommuteComparison({ currentAqi = 190 }) {
-  const [distanceKm, setDistanceKm] = useState(10);
+export interface CommuteComparisonProps {
+  currentAqi?: number;
+}
 
-  const commuteOptions = useMemo(
+function CommuteComparison({ currentAqi = 190 }: CommuteComparisonProps): React.ReactElement {
+  const [distanceKm, setDistanceKm] = useState<number>(10);
+
+  const commuteOptions = useMemo<CommuteComparisonOption[]>(
     () => calculateMultiModalCommute(distanceKm, currentAqi),
     [distanceKm, currentAqi]
   );
@@ -82,9 +86,5 @@ function CommuteComparison({ currentAqi = 190 }) {
     </div>
   );
 }
-
-CommuteComparison.propTypes = {
-  currentAqi: PropTypes.number,
-};
 
 export default memo(CommuteComparison);

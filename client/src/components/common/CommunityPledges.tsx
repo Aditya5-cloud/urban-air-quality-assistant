@@ -1,8 +1,9 @@
 import React, { useState, useMemo, memo } from 'react';
 import { calculateCommunityOffset, PLEDGE_WEIGHTS } from '../../utils/airPhysics';
+import type { CommunityOffsetResult } from '../../types';
 
-function CommunityPledges() {
-  const [pledges, setPledges] = useState({
+function CommunityPledges(): React.ReactElement {
+  const [pledges, setPledges] = useState<Record<string, number>>({
     carpool: 12,
     cleanHeating: 6,
     dampMopping: 25,
@@ -10,7 +11,7 @@ function CommunityPledges() {
     vulnerableCheck: 18,
   });
 
-  const [userJoined, setUserJoined] = useState({
+  const [userJoined, setUserJoined] = useState<Record<string, boolean>>({
     carpool: false,
     cleanHeating: false,
     dampMopping: true,
@@ -18,14 +19,17 @@ function CommunityPledges() {
     vulnerableCheck: false,
   });
 
-  const offsets = useMemo(() => calculateCommunityOffset(pledges), [pledges]);
+  const offsets = useMemo<CommunityOffsetResult>(
+    () => calculateCommunityOffset(pledges),
+    [pledges]
+  );
 
-  const toggleUserPledge = (key) => {
+  const toggleUserPledge = (key: string): void => {
     const isNowJoined = !userJoined[key];
     setUserJoined((prev) => ({ ...prev, [key]: isNowJoined }));
     setPledges((prev) => ({
       ...prev,
-      [key]: prev[key] + (isNowJoined ? 1 : -1),
+      [key]: (prev[key] || 0) + (isNowJoined ? 1 : -1),
     }));
   };
 
@@ -59,7 +63,7 @@ function CommunityPledges() {
       <div className="pledges-list-grid">
         {Object.entries(PLEDGE_WEIGHTS).map(([key, item]) => {
           const isJoined = userJoined[key];
-          const count = pledges[key];
+          const count = pledges[key] || 0;
 
           return (
             <div key={key} className={`pledge-item-card ${isJoined ? 'pledge-active' : ''}`}>

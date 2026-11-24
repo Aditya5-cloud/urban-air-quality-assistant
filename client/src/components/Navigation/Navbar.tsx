@@ -1,6 +1,14 @@
 import React, { useState, useEffect, memo } from 'react';
-import PropTypes from 'prop-types';
+import type { AtmosphericData } from '../../types';
 import './Navbar.css';
+
+export interface NavbarProps {
+  currentView?: 'landing' | 'assistant';
+  atmospheric?: AtmosphericData | null;
+  currentCity?: string;
+  onNavigateToGenerator?: (() => void) | null;
+  onNavigateToLanding?: (() => void) | null;
+}
 
 function Navbar({
   currentView = 'landing',
@@ -8,8 +16,8 @@ function Navbar({
   currentCity = 'Delhi',
   onNavigateToGenerator = null,
   onNavigateToLanding = null,
-}) {
-  const [highContrast, setHighContrast] = useState(false);
+}: NavbarProps): React.ReactElement {
+  const [highContrast, setHighContrast] = useState<boolean>(false);
 
   useEffect(() => {
     if (highContrast) {
@@ -19,7 +27,7 @@ function Navbar({
     }
   }, [highContrast]);
 
-  const handleCtaClick = (e) => {
+  const handleCtaClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     if (currentView === 'assistant') {
       if (onNavigateToLanding) onNavigateToLanding();
@@ -127,26 +135,5 @@ function Navbar({
     </header>
   );
 }
-
-Navbar.propTypes = {
-  currentView: PropTypes.oneOf(['landing', 'assistant']),
-  atmospheric: PropTypes.shape({
-    city: PropTypes.string,
-    weather: PropTypes.shape({
-      temperature: PropTypes.number,
-      condition: PropTypes.string,
-      inversionRisk: PropTypes.string,
-    }),
-    airQuality: PropTypes.shape({
-      pm2_5: PropTypes.number,
-      us_aqi: PropTypes.number,
-      category: PropTypes.string,
-      color: PropTypes.string,
-    }),
-  }),
-  currentCity: PropTypes.string,
-  onNavigateToGenerator: PropTypes.func,
-  onNavigateToLanding: PropTypes.func,
-};
 
 export default memo(Navbar);

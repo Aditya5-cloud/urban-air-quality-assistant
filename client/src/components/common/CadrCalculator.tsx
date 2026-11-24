@@ -5,11 +5,11 @@ import {
   estimatePurificationTime,
 } from '../../utils/airPhysics';
 
-function CadrCalculator() {
-  const [area, setArea] = useState(16); // 16 m2 default bedroom
-  const [height, setHeight] = useState(2.8); // 2.8m ceiling
-  const [hasPurifier] = useState(true);
-  const [purifierCadr] = useState(250); // 250 m3/h typical
+function CadrCalculator(): React.ReactElement {
+  const [area, setArea] = useState<number>(16); // 16 m2 default bedroom
+  const [height, setHeight] = useState<number>(2.8); // 2.8m ceiling
+  const [hasPurifier] = useState<boolean>(true);
+  const [purifierCadr] = useState<number>(250); // 250 m3/h typical
 
   const volume = useMemo(() => calculateRoomVolume(area, height), [area, height]);
   const requiredCadr = useMemo(() => calculateRequiredCADR(volume, 4), [volume]);
