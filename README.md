@@ -1,6 +1,6 @@
 # 🍃 Urban Air Quality Assistant
 
-[![CI Tests](https://img.shields.io/badge/tests-53%20passed-brightgreen.svg)](#-testing--quality-verification)
+[![CI Tests](https://img.shields.io/badge/tests-55%20passed-brightgreen.svg)](#-testing--quality-verification)
 [![Vercel Deployment](https://img.shields.io/badge/deployment-Vercel%20Ready-black.svg?logo=vercel)](#-deploying-to-vercel)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Zero PII](https://img.shields.io/badge/Privacy-Zero%20PII%20Retention-success.svg)](#-security--privacy-architecture)
@@ -295,7 +295,7 @@ Open your browser at `http://localhost:3000`.
 
 ## 🧪 Testing & Quality Verification
 
-The project includes **53 automated tests** covering unit behavior, integration flows, security headers, rate limiting, and edge cases:
+The project includes **55 automated tests** covering unit behavior, integration flows, security headers, rate limiting, and edge cases:
 
 ```bash
 # 1. Run Backend Server Tests (Jest + Supertest)
@@ -335,7 +335,7 @@ npm run build
 | **1. Code Quality** | Clean code, modularity, best practices | • Modular MVC/service architecture (`routes/`, `services/`, `validators/`, `models/`, `components/`).<br>• Fully typed props and clean React state management.<br>• 0 ESLint warnings across both server and client codebases.<br>• Clean git history and semantic commit messages. |
 | **2. Security** | Hardening, defense-in-depth, secrets protection | • Helmet security headers (CSP, HSTS, X-Frame-Options).<br>• 10kb request payload size enforcement (HTTP 413).<br>• 10 req/min GenAI rate limiting (HTTP 429).<br>• Zero PII collection; zero sensitive credentials committed.<br>• Sanitized error responses without stack traces. |
 | **3. Efficiency** | Low latency, compute optimization, caching | • 10-minute in-memory caching for Open-Meteo API requests.<br>• Stateless in-memory TTL session store eliminating database latency.<br>• Lightweight client bundle (55 kB gzipped JS, 4.8 kB gzipped CSS).<br>• Vite production build compiles in ~700ms. |
-| **4. Testing** | Comprehensive test coverage, edge cases | • **53 automated tests** (23 server, 30 client) with 100% pass rate.<br>• Edge cases: invalid UUIDs, missing city, payload overflow, rate-limit threshold, multi-turn chat persistence.<br>• Deterministic mock fallback ensuring offline test determinism. |
+| **4. Testing** | Comprehensive test coverage, edge cases | • **55 automated tests** (25 server, 30 client) with 100% pass rate.<br>• Edge cases: invalid UUIDs, missing city, payload overflow, rate-limit threshold, multi-turn chat persistence.<br>• Deterministic mock fallback ensuring offline test determinism. |
 | **5. Accessibility** | WCAG AA compliance, inclusive design | • Semantic HTML landmarks (`<header>`, `<main>`, `<section>`, `<footer>`, `<form>`).<br>• Accessible ARIA attributes (`aria-live="polite"`, `role="region"`, `role="alert"`).<br>• High-contrast color palette exceeding WCAG AA minimum 4.5:1 ratio.<br>• Fully navigable via keyboard with visible focus rings (`:focus-visible`). |
 | **6. Problem Statement Alignment** | Winter smog focus, actionable guidance | • Directly targets urban winter smog & thermal inversion stagnation.<br>• 4 core action pillars: Low-emission routines, DIY indoor hacks (Corsi-Rosenthal box), sustainable alternatives, and transparent impact assessment.<br>• Strictly domain-guarded conversational AI assistant. |
 
