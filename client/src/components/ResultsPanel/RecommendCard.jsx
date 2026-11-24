@@ -1,6 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-function RecommendCard({ title, subtitle, icon, items, impacts, categoryClass }) {
+function RecommendCard({ title, subtitle = null, icon, items, impacts = [], categoryClass }) {
   if (!items || items.length === 0) return null;
 
   return (
@@ -29,7 +30,7 @@ function RecommendCard({ title, subtitle, icon, items, impacts, categoryClass })
           }
 
           return (
-            <li key={index} className="recommend-item">
+            <li key={`${categoryClass}-item-${index}`} className="recommend-item">
               <div className="item-check-icon" aria-hidden="true">✓</div>
               <div className="item-content">
                 <span className="recommend-action">{actionText}</span>
@@ -49,5 +50,14 @@ function RecommendCard({ title, subtitle, icon, items, impacts, categoryClass })
     </article>
   );
 }
+
+RecommendCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string,
+  icon: PropTypes.string.isRequired,
+  items: PropTypes.arrayOf(PropTypes.string).isRequired,
+  impacts: PropTypes.arrayOf(PropTypes.string),
+  categoryClass: PropTypes.string.isRequired,
+};
 
 export default RecommendCard;

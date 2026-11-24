@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import './IntakeForm.css';
 
 const DEFAULT_FORM_DATA = {
@@ -11,12 +12,12 @@ const DEFAULT_FORM_DATA = {
   notes: '',
 };
 
-function IntakeForm({ onSubmit, isLoading, presetData }) {
+function IntakeForm({ onSubmit, isLoading = false, presetData = null }) {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [errors, setErrors] = useState({});
 
   // Sync external preset if provided
-  React.useEffect(() => {
+  useEffect(() => {
     if (presetData) {
       setFormData((prev) => ({
         ...prev,
@@ -344,5 +345,19 @@ function IntakeForm({ onSubmit, isLoading, presetData }) {
     </form>
   );
 }
+
+IntakeForm.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool,
+  presetData: PropTypes.shape({
+    city: PropTypes.string,
+    householdType: PropTypes.string,
+    householdSize: PropTypes.number,
+    commute: PropTypes.string,
+    healthConcern: PropTypes.bool,
+    seasonContext: PropTypes.string,
+    notes: PropTypes.string,
+  }),
+};
 
 export default IntakeForm;

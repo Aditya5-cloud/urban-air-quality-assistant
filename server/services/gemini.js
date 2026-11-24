@@ -129,6 +129,11 @@ const generateSimulatedRecommendations = (profile, atmospheric) => {
 };
 
 class GeminiService {
+  /**
+   * Checks whether the Google Gemini API is configured and available.
+   * Returns false during automated test runs to protect quota.
+   * @returns {boolean} True if the API key is set and valid.
+   */
   static isConfigured() {
     if (env.NODE_ENV === 'test' && process.env.TEST_LIVE_AI !== 'true') {
       // Protect user's Google Gemini API quota from being exhausted during automated test runs
@@ -137,6 +142,13 @@ class GeminiService {
     return Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim() !== '' && env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
   }
 
+  /**
+   * Generates a structured Clean Air Action Plan using Google Gemini.
+   * Falls back to a deterministic offline simulation when the API key is not configured.
+   * @param {object} profile - User household profile (city, type, size, commute, healthConcern).
+   * @param {object|null} atmosphericData - Live Open-Meteo air quality and weather data.
+   * @returns {Promise<{routines: string[], indoorHacks: string[], alternatives: string[], impacts: string[], metadata: object}>}
+   */
   static async getRecommendations(profile, atmosphericData = null) {
     if (!GeminiService.isConfigured()) {
       return generateSimulatedRecommendations(profile, atmosphericData);
@@ -209,6 +221,14 @@ Provide exactly 3 items in "routines", 3 items in "indoorHacks", 3 items in "alt
     }
   }
 
+  /**
+   * Sends a domain-guarded multi-turn chat message to Gemini.
+   * Off-topic queries are declined before the API call is made.
+   * @param {Array<{role: string, text: string}>} chatHistory - Prior conversation turns.
+   * @param {string} newMessage - The user's latest message.
+   * @param {object|null} profileContext - Household profile for contextual personalization.
+   * @returns {Promise<{reply: string, metadata: object}>}
+   */
   static async getChatReply(chatHistory, newMessage, profileContext) {
     const isAirQualityQuery = (text) => {
       const lower = text.toLowerCase();

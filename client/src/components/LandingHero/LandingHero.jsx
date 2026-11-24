@@ -1,7 +1,8 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './LandingHero.css';
 
-function LandingHero({ onSelectPreset, onLaunchAssistant }) {
+function LandingHero({ onSelectPreset = null, onLaunchAssistant = null }) {
   const handleLaunch = () => {
     if (onLaunchAssistant) {
       onLaunchAssistant();
@@ -143,5 +144,10 @@ function LandingHero({ onSelectPreset, onLaunchAssistant }) {
     </section>
   );
 }
+
+LandingHero.propTypes = {
+  onSelectPreset: PropTypes.func,
+  onLaunchAssistant: PropTypes.func,
+};
 
 export default LandingHero;

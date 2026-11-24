@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import RecommendCard from './RecommendCard';
 import './ResultsPanel.css';
 
-function ResultsPanel({ planData, onReset }) {
+function ResultsPanel({ planData = null, onReset }) {
   const headingRef = useRef(null);
 
   useEffect(() => {
@@ -120,5 +121,28 @@ function ResultsPanel({ planData, onReset }) {
     </section>
   );
 }
+
+ResultsPanel.propTypes = {
+  planData: PropTypes.shape({
+    sessionId: PropTypes.string,
+    profile: PropTypes.shape({
+      city: PropTypes.string.isRequired,
+      householdType: PropTypes.string.isRequired,
+      householdSize: PropTypes.number.isRequired,
+    }).isRequired,
+    recommendations: PropTypes.shape({
+      routines: PropTypes.arrayOf(PropTypes.string).isRequired,
+      indoorHacks: PropTypes.arrayOf(PropTypes.string).isRequired,
+      alternatives: PropTypes.arrayOf(PropTypes.string).isRequired,
+      impacts: PropTypes.arrayOf(PropTypes.string).isRequired,
+    }).isRequired,
+    metadata: PropTypes.shape({
+      isMock: PropTypes.bool,
+      source: PropTypes.string,
+      model: PropTypes.string,
+    }),
+  }),
+  onReset: PropTypes.func.isRequired,
+};
 
 export default ResultsPanel;

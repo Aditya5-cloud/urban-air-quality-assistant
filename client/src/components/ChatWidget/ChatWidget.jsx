@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import ChatBubble from './ChatBubble';
 import './ChatWidget.css';
 
-function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
+function ChatWidget({ sessionId, initialHistory = [], profileCity = null }) {
   const [messages, setMessages] = useState(initialHistory);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -105,7 +106,7 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
         ) : (
           <ul className="chat-bubbles-list" role="log" aria-live="polite" aria-label="Conversation messages">
             {messages.map((msg, index) => (
-              <ChatBubble key={index} message={msg} />
+              <ChatBubble key={msg.timestamp || `msg-${index}`} message={msg} />
             ))}
             <div ref={messagesEndRef} aria-hidden="true" />
           </ul>
@@ -146,5 +147,17 @@ function ChatWidget({ sessionId, initialHistory = [], profileCity }) {
     </section>
   );
 }
+
+ChatWidget.propTypes = {
+  sessionId: PropTypes.string.isRequired,
+  initialHistory: PropTypes.arrayOf(
+    PropTypes.shape({
+      role: PropTypes.oneOf(['user', 'assistant']).isRequired,
+      text: PropTypes.string.isRequired,
+      timestamp: PropTypes.string,
+    })
+  ),
+  profileCity: PropTypes.string,
+};
 
 export default ChatWidget;

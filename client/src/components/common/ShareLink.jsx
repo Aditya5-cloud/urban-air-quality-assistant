@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
+/**
+ * ShareLink provides a copy-to-clipboard shareable session URL.
+ * Session links are active for 7 days via the in-memory TTL repository.
+ */
 function ShareLink({ sessionId }) {
   const [copied, setCopied] = useState(false);
 
@@ -56,5 +61,9 @@ function ShareLink({ sessionId }) {
     </div>
   );
 }
+
+ShareLink.propTypes = {
+  sessionId: PropTypes.string.isRequired,
+};
 
 export default ShareLink;

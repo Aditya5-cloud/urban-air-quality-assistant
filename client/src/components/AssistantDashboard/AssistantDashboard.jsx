@@ -1,14 +1,15 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import IntakeForm from '../IntakeForm/IntakeForm';
 import ResultsPanel from '../ResultsPanel/ResultsPanel';
 import ChatWidget from '../ChatWidget/ChatWidget';
 import './AssistantDashboard.css';
 
 function AssistantDashboard({
-  planResult,
-  isLoading,
-  apiError,
-  selectedPreset,
+  planResult = null,
+  isLoading = false,
+  apiError = null,
+  selectedPreset = null,
   onSubmitForm,
   onResetPlan,
   onSelectPreset,
@@ -140,5 +141,23 @@ function AssistantDashboard({
     </div>
   );
 }
+
+AssistantDashboard.propTypes = {
+  planResult: PropTypes.shape({
+    sessionId: PropTypes.string,
+    profile: PropTypes.shape({
+      city: PropTypes.string.isRequired,
+    }),
+    recommendations: PropTypes.object,
+    chatHistory: PropTypes.array,
+    atmospheric: PropTypes.object,
+  }),
+  isLoading: PropTypes.bool,
+  apiError: PropTypes.string,
+  selectedPreset: PropTypes.object,
+  onSubmitForm: PropTypes.func.isRequired,
+  onResetPlan: PropTypes.func.isRequired,
+  onSelectPreset: PropTypes.func.isRequired,
+};
 
 export default AssistantDashboard;

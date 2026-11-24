@@ -1,12 +1,13 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './Navbar.css';
 
 function Navbar({
   currentView = 'landing',
-  atmospheric,
+  atmospheric = null,
   currentCity = 'Delhi',
-  onNavigateToGenerator,
-  onNavigateToLanding,
+  onNavigateToGenerator = null,
+  onNavigateToLanding = null,
 }) {
   const handleCtaClick = (e) => {
     e.preventDefault();
@@ -96,5 +97,26 @@ function Navbar({
     </header>
   );
 }
+
+Navbar.propTypes = {
+  currentView: PropTypes.oneOf(['landing', 'assistant']),
+  atmospheric: PropTypes.shape({
+    city: PropTypes.string,
+    weather: PropTypes.shape({
+      temperature: PropTypes.number,
+      condition: PropTypes.string,
+      inversionRisk: PropTypes.string,
+    }),
+    airQuality: PropTypes.shape({
+      pm2_5: PropTypes.number,
+      us_aqi: PropTypes.number,
+      category: PropTypes.string,
+      color: PropTypes.string,
+    }),
+  }),
+  currentCity: PropTypes.string,
+  onNavigateToGenerator: PropTypes.func,
+  onNavigateToLanding: PropTypes.func,
+};
 
 export default Navbar;

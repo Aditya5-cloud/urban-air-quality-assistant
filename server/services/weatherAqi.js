@@ -31,6 +31,11 @@ const WMO_WEATHER_CODES = {
   95: 'Thunderstorm',
 };
 
+/**
+ * Returns the US AQI severity category, label, and color code for a given AQI value.
+ * @param {number} usAqi - The US Air Quality Index value (0–500).
+ * @returns {{category: string, severity: string, color: string}}
+ */
 const getAqiCategory = (usAqi) => {
   if (usAqi <= 50) return { category: 'Good', severity: 'low', color: '#15803d' };
   if (usAqi <= 100) return { category: 'Moderate', severity: 'moderate', color: '#ca8a04' };
